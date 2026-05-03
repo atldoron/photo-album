@@ -37,7 +37,7 @@ export async function getAlbumMedia(folderUrl: string): Promise<MediaItem[]> {
     const response = await drive.files.list({
       q: `'${folderId}' in parents and trashed = false`,
       fields:
-        'nextPageToken, files(id, name, mimeType, imageMediaMetadata)',
+        'nextPageToken, files(id, name, mimeType, imageMediaMetadata, createdTime)',
       pageSize: 1000,
       ...(pageToken ? { pageToken } : {}),
     })
@@ -61,6 +61,8 @@ export async function getAlbumMedia(folderUrl: string): Promise<MediaItem[]> {
       if (meta.time) {
         // Drive format: "YYYY:MM:DD HH:MM:SS"
         takenAt = (meta.time as string).replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
+      } else if (file.createdTime) {
+        takenAt = file.createdTime
       }
 
       items.push({
