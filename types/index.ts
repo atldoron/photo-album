@@ -25,6 +25,7 @@ export interface MediaItem {
   width: number
   height: number
   takenAt?: string
+  fileSize?: number
   latitude?: number
   longitude?: number
 }

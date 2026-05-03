@@ -37,7 +37,7 @@ export async function getAlbumMedia(folderUrl: string): Promise<MediaItem[]> {
     const response = await drive.files.list({
       q: `'${folderId}' in parents and trashed = false`,
       fields:
-        'nextPageToken, files(id, name, mimeType, imageMediaMetadata, createdTime)',
+        'nextPageToken, files(id, name, mimeType, size, imageMediaMetadata, createdTime)',
       pageSize: 1000,
       ...(pageToken ? { pageToken } : {}),
     })
@@ -79,6 +79,7 @@ export async function getAlbumMedia(folderUrl: string): Promise<MediaItem[]> {
         width,
         height,
         takenAt,
+        fileSize: file.size ? Number(file.size) : undefined,
         latitude: meta.location?.latitude,
         longitude: meta.location?.longitude,
       })
