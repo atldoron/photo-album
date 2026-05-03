@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { google } from 'googleapis'
-import ExifReader from 'exifr'
+import exifr from 'exifr'
 
 function getAuth() {
   const sa = process.env.GOOGLE_SERVICE_ACCOUNT?.replace(/^﻿/, '')
@@ -20,26 +20,25 @@ export async function GET(
     const auth = getAuth()
     const drive = google.drive({ version: 'v3', auth })
 
-    // Download first 128KB — enough for EXIF headers
+    // Download first 128KB — JPEG EXIF (incl. GPS) is always in the first few KB
     const res = await drive.files.get(
       { fileId, alt: 'media' },
       { responseType: 'arraybuffer', headers: { Range: 'bytes=0-131071' } }
     )
 
     const buffer = Buffer.from(res.data as ArrayBuffer)
-    const exif = await ExifReader.parse(buffer, {
-      gps: true,
-      pick: ['GPSLatitude', 'GPSLongitude', 'GPSLatitudeRef', 'GPSLongitudeRef'],
-    })
 
-    if (!exif?.latitude || !exif?.longitude) {
+    // exifr.gps() extracts GPS coordinates directly
+    const gps = await exifr.gps(buffer)
+
+    if (!gps?.latitude || !gps?.longitude) {
       return Response.json({ hasGps: false })
     }
 
     return Response.json({
       hasGps: true,
-      latitude: exif.latitude,
-      longitude: exif.longitude,
+      latitude: gps.latitude,
+      longitude: gps.longitude,
     })
   } catch (err) {
     return Response.json({ hasGps: false, error: String(err) })
