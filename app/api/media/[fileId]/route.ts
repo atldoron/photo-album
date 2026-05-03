@@ -27,12 +27,18 @@ export async function GET(
     )
 
     const buffer = Buffer.from(res.data as ArrayBuffer)
+    const bufferSize = buffer.length
+    const statusCode = res.status
 
-    // exifr.gps() extracts GPS coordinates directly
+    // Try exifr.gps() first
     const gps = await exifr.gps(buffer)
 
+    // Also try full parse to see what tags are present
+    const allTags = await exifr.parse(buffer, { gps: true, xmp: false, iptc: false, icc: false })
+    const tagKeys = allTags ? Object.keys(allTags) : []
+
     if (!gps?.latitude || !gps?.longitude) {
-      return Response.json({ hasGps: false })
+      return Response.json({ hasGps: false, debug: { bufferSize, statusCode, tagKeys } })
     }
 
     return Response.json({
