@@ -44,36 +44,28 @@ export default function Toolbar({
 
   return (
     <header
-      className="sticky top-0 z-30 px-4 py-3"
+      className="sticky top-0 z-30 px-4 py-2"
       style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
     >
-      {/* top row */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold leading-tight truncate">{albumName}</h1>
+      {/* single combined row */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {/* title info */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 text-sm">
+          <span className="font-semibold truncate">{albumName}</span>
           {albumDescription && (
-            <p className="text-sm mt-0.5 truncate" style={{ color: 'var(--muted)' }}>
-              {albumDescription}
-            </p>
+            <>
+              <span style={{ color: 'var(--border)' }}>·</span>
+              <span className="truncate" style={{ color: 'var(--muted)' }}>{albumDescription}</span>
+            </>
           )}
           {counter && (
-            <p className="text-xs mt-0.5 hidden sm:block" style={{ color: 'var(--muted)' }}>
-              {counter}
-            </p>
+            <>
+              <span style={{ color: 'var(--border)' }}>·</span>
+              <span className="whitespace-nowrap" style={{ color: 'var(--muted)' }}>{counter}</span>
+            </>
           )}
         </div>
-        <button
-          onClick={toggle}
-          className="shrink-0 text-xl p-1.5 rounded-lg hover:opacity-70 transition-opacity"
-          title={dark ? 'מצב בהיר' : 'מצב כהה'}
-          aria-label={dark ? 'מצב בהיר' : 'מצב כהה'}
-        >
-          {dark ? '☀️' : '🌙'}
-        </button>
-      </div>
 
-      {/* controls row */}
-      <div className="flex items-center gap-3 mt-3 flex-wrap">
         {/* layout */}
         <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           {LAYOUTS.map((l) => (
@@ -136,6 +128,16 @@ export default function Toolbar({
           title="מסך מלא"
         >
           ⛶
+        </button>
+
+        {/* dark mode */}
+        <button
+          onClick={toggle}
+          className="text-sm px-2.5 py-1.5 rounded-lg hover:opacity-70 transition-opacity"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          title={dark ? 'מצב בהיר' : 'מצב כהה'}
+        >
+          {dark ? '☀️' : '🌙'}
         </button>
       </div>
     </header>
