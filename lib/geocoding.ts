@@ -12,7 +12,7 @@ interface NominatimResult {
 
 export async function getPlaceName(lat: number, lon: number): Promise<string | null> {
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=he`
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=he,en`
     const res = await fetch(url, {
       headers: { 'User-Agent': 'PhotoAlbumApp/1.0 (personal)' },
       next: { revalidate: 86400 },
