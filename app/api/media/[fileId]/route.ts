@@ -22,12 +22,45 @@ function readRational(buf: Buffer, offset: number, le: boolean): number {
   return den === 0 ? 0 : num / den
 }
 
-function hex(buf: Buffer, offset: number, len: number): string {
-  return buf.slice(offset, offset + len).toString('hex')
+/** Search for XMP GPS data (exif:GPSLatitude / exif:GPSLongitude) */
+function parseXmpGps(buf: Buffer): { latitude: number; longitude: number } | null {
+  // XMP in JPEG: APP1 segment starting with "http://ns.adobe.com/xap/1.0/\0"
+  const xmpMarker = Buffer.from('http://ns.adobe.com/xap/')
+  const idx = buf.indexOf(xmpMarker)
+  if (idx < 0) return null
+
+  // XMP is UTF-8 text; read up to 64KB from here
+  const xmpText = buf.slice(idx, Math.min(idx + 65536, buf.length)).toString('utf8')
+
+  // Look for exif:GPSLatitude="DD,MM.SSS..." or GPS coordinate patterns
+  const latMatch = xmpText.match(/exif:GPSLatitude="([^"]+)"/)
+  const lngMatch = xmpText.match(/exif:GPSLongitude="([^"]+)"/)
+  const latRefMatch = xmpText.match(/exif:GPSLatitudeRef="([NS])"/)
+  const lngRefMatch = xmpText.match(/exif:GPSLongitudeRef="([EW])"/)
+
+  if (!latMatch || !lngMatch) return null
+
+  // Parse "DD,MM.SSS" or "DD,MM,SS" DMS format
+  function parseDms(s: string): number {
+    const parts = s.split(',').map(Number)
+    if (parts.length === 3) return parts[0] + parts[1] / 60 + parts[2] / 3600
+    if (parts.length === 2) return parts[0] + parts[1] / 60
+    return parts[0]
+  }
+
+  const lat = parseDms(latMatch[1])
+  const lng = parseDms(lngMatch[1])
+  const latRef = latRefMatch ? latRefMatch[1] : 'N'
+  const lngRef = lngRefMatch ? lngRefMatch[1] : 'E'
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  return {
+    latitude: latRef === 'S' ? -lat : lat,
+    longitude: lngRef === 'W' ? -lng : lng,
+  }
 }
 
-function parseGpsDebug(buf: Buffer) {
-  // 1. Find APP1
+function parseExifGps(buf: Buffer): { latitude: number; longitude: number } | null {
   let app1 = -1
   for (let i = 0; i < Math.min(buf.length - 6, 65536); i++) {
     if (buf[i] === 0xff && buf[i + 1] === 0xe1) {
@@ -37,89 +70,60 @@ function parseGpsDebug(buf: Buffer) {
       }
     }
   }
-  if (app1 < 0) return { error: 'no APP1' }
+  if (app1 < 0) return null
 
   const tiff = app1 + 6
   const le = buf[tiff] === 0x49
-  if (readU16(buf, tiff + 2, le) !== 42) return { error: 'bad TIFF magic', tiff, bytes: hex(buf, tiff, 8) }
+  if (readU16(buf, tiff + 2, le) !== 42) return null
 
-  const ifd0RelOffset = readU32(buf, tiff + 4, le)
-  const ifd0Offset = tiff + ifd0RelOffset
+  const ifd0Offset = tiff + readU32(buf, tiff + 4, le)
   const ifd0Count = readU16(buf, ifd0Offset, le)
-
-  // collect all IFD0 tags
-  const ifd0Tags: Record<string, string> = {}
   let gpsIfdOffset = -1
   for (let i = 0; i < ifd0Count; i++) {
     const entry = ifd0Offset + 2 + i * 12
     if (entry + 12 > buf.length) break
     const tag = readU16(buf, entry, le)
-    const type = readU16(buf, entry + 2, le)
-    const count = readU32(buf, entry + 4, le)
-    const valOrOff = readU32(buf, entry + 8, le)
-    ifd0Tags[`0x${tag.toString(16).padStart(4,'0')}`] = `type=${type} count=${count} val/off=${valOrOff}`
     if (tag === 0x8825) {
-      gpsIfdOffset = tiff + valOrOff
+      gpsIfdOffset = tiff + readU32(buf, entry + 8, le)
+      break
     }
   }
-
-  if (gpsIfdOffset < 0) return { error: 'no GPS IFD in IFD0', tiff, le, ifd0Tags }
+  if (gpsIfdOffset < 0) return null
 
   const gpsCount = readU16(buf, gpsIfdOffset, le)
-  const gpsTags: Record<string, string> = {}
   let latRef = 'N', lngRef = 'E'
-  let latRelOffset = -1, lngRelOffset = -1
+  let latOffset = -1, lngOffset = -1
 
   for (let i = 0; i < gpsCount; i++) {
     const entry = gpsIfdOffset + 2 + i * 12
     if (entry + 12 > buf.length) break
     const tag = readU16(buf, entry, le)
-    const type = readU16(buf, entry + 2, le)
-    const count = readU32(buf, entry + 4, le)
-    const valOrOff = readU32(buf, entry + 8, le)
-    gpsTags[`0x${tag.toString(16).padStart(4,'0')}`] = `type=${type} count=${count} val/off=${valOrOff}`
     if (tag === 0x0001) latRef = String.fromCharCode(buf[entry + 8])
-    else if (tag === 0x0002) latRelOffset = valOrOff
+    else if (tag === 0x0002) latOffset = tiff + readU32(buf, entry + 8, le)
     else if (tag === 0x0003) lngRef = String.fromCharCode(buf[entry + 8])
-    else if (tag === 0x0004) lngRelOffset = valOrOff
+    else if (tag === 0x0004) lngOffset = tiff + readU32(buf, entry + 8, le)
   }
 
-  const latOffset = latRelOffset >= 0 ? tiff + latRelOffset : -1
-  const lngOffset = lngRelOffset >= 0 ? tiff + lngRelOffset : -1
+  if (latOffset < 0 || lngOffset < 0) return null
+  if (latOffset + 24 > buf.length || lngOffset + 24 > buf.length) return null
 
-  const latBytes = latOffset >= 0 && latOffset + 24 <= buf.length ? hex(buf, latOffset, 24) : 'OUT_OF_RANGE'
-  const lngBytes = lngOffset >= 0 && lngOffset + 24 <= buf.length ? hex(buf, lngOffset, 24) : 'OUT_OF_RANGE'
+  // Skip if GPS IFD has empty/zero values (Samsung pre-allocated template)
+  const latBytes = buf.slice(latOffset, latOffset + 24)
+  if (latBytes.every(b => b === 0)) return null
 
-  let latitude: number | null = null
-  let longitude: number | null = null
-  if (latOffset >= 0 && latOffset + 24 <= buf.length) {
-    const lat = readRational(buf, latOffset, le) + readRational(buf, latOffset + 8, le) / 60 + readRational(buf, latOffset + 16, le) / 3600
-    latitude = latRef === 'S' ? -lat : lat
-  }
-  if (lngOffset >= 0 && lngOffset + 24 <= buf.length) {
-    const lng = readRational(buf, lngOffset, le) + readRational(buf, lngOffset + 8, le) / 60 + readRational(buf, lngOffset + 16, le) / 3600
-    longitude = lngRef === 'W' ? -lng : lng
-  }
+  const lat =
+    readRational(buf, latOffset, le) +
+    readRational(buf, latOffset + 8, le) / 60 +
+    readRational(buf, latOffset + 16, le) / 3600
+  const lng =
+    readRational(buf, lngOffset, le) +
+    readRational(buf, lngOffset + 8, le) / 60 +
+    readRational(buf, lngOffset + 16, le) / 3600
 
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
   return {
-    bufLen: buf.length,
-    tiff,
-    le,
-    ifd0RelOffset,
-    ifd0Count,
-    gpsIfdOffset,
-    gpsCount,
-    gpsTags,
-    latRef,
-    lngRef,
-    latRelOffset,
-    lngRelOffset,
-    latOffset,
-    lngOffset,
-    latBytes,
-    lngBytes,
-    latitude,
-    longitude,
+    latitude: latRef === 'S' ? -lat : lat,
+    longitude: lngRef === 'W' ? -lng : lng,
   }
 }
 
@@ -138,9 +142,15 @@ export async function GET(
     )
 
     const buffer = Buffer.from(res.data as ArrayBuffer)
-    const debug = parseGpsDebug(buffer)
-    return Response.json(debug)
+
+    const gps = parseExifGps(buffer) ?? parseXmpGps(buffer)
+
+    if (!gps) {
+      return Response.json({ hasGps: false })
+    }
+
+    return Response.json({ hasGps: true, latitude: gps.latitude, longitude: gps.longitude })
   } catch (err) {
-    return Response.json({ error: String(err) })
+    return Response.json({ hasGps: false, error: String(err) })
   }
 }
