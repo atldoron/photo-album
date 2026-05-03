@@ -54,7 +54,7 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
     setError('')
     try {
       await onSave(
-        { ...form, defaultLayout: form.defaultLayout as Layout, defaultSort: form.defaultSort as SortOption },
+        { ...form, defaultLayout: form.defaultLayout as Layout },
         originalId,
       )
       onClose()
