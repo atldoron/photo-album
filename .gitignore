@@ -42,3 +42,8 @@ next-env.d.ts
 
 # local data (KV fallback)
 .data/
+
+# do NOT ignore _data — this is the GitHub-backed storage
+# _data/ is committed to the repo
+
+.vercel
