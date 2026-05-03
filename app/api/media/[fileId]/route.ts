@@ -32,11 +32,11 @@ export async function GET(
     const exifData: any = await exifr.parse(buffer, { gps: true, xmp: false, iptc: false, icc: false })
 
     // exifr with gps:true computes latitude/longitude — prefer those
-    let lat: number | undefined = typeof exifData?.latitude === 'number' ? exifData.latitude : undefined
-    let lng: number | undefined = typeof exifData?.longitude === 'number' ? exifData.longitude : undefined
+    let lat: number | undefined = Number.isFinite(exifData?.latitude) ? exifData.latitude : undefined
+    let lng: number | undefined = Number.isFinite(exifData?.longitude) ? exifData.longitude : undefined
 
     // Fallback: manual DMS → decimal conversion from raw GPS tags
-    if ((lat == null || lng == null) && exifData?.GPSLatitude && exifData?.GPSLongitude) {
+    if ((lat == null || lng == null) && Array.isArray(exifData?.GPSLatitude) && Array.isArray(exifData?.GPSLongitude)) {
       const [d, m, s] = exifData.GPSLatitude as number[]
       lat = d + m / 60 + s / 3600
       if (exifData.GPSLatitudeRef === 'S') lat = -lat
@@ -46,7 +46,7 @@ export async function GET(
       if (exifData.GPSLongitudeRef === 'W') lng = -lng
     }
 
-    if (lat == null || lng == null) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return Response.json({ hasGps: false })
     }
 
