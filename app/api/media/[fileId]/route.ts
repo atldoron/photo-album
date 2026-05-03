@@ -10,7 +10,6 @@ function getAuth() {
   })
 }
 
-/** Read a 4-byte unsigned int from a buffer respecting byte order */
 function readU32(buf: Buffer, offset: number, le: boolean): number {
   return le ? buf.readUInt32LE(offset) : buf.readUInt32BE(offset)
 }
@@ -23,81 +22,104 @@ function readRational(buf: Buffer, offset: number, le: boolean): number {
   return den === 0 ? 0 : num / den
 }
 
-/**
- * Minimal JPEG/EXIF GPS parser.
- * Returns { latitude, longitude } or null if not found.
- */
-function parseGps(buf: Buffer): { latitude: number; longitude: number } | null {
-  // 1. Find APP1 (0xFF 0xE1) with "Exif\0\0"
+function hex(buf: Buffer, offset: number, len: number): string {
+  return buf.slice(offset, offset + len).toString('hex')
+}
+
+function parseGpsDebug(buf: Buffer) {
+  // 1. Find APP1
   let app1 = -1
   for (let i = 0; i < Math.min(buf.length - 6, 65536); i++) {
     if (buf[i] === 0xff && buf[i + 1] === 0xe1) {
-      if (buf[i + 4] === 0x45 && buf[i + 5] === 0x78 && buf[i + 6] === 0x69) { // "Exi"
-        app1 = i + 4 // start of TIFF header (after marker + length)
+      if (buf[i + 4] === 0x45 && buf[i + 5] === 0x78 && buf[i + 6] === 0x69) {
+        app1 = i + 4
         break
       }
     }
   }
-  if (app1 < 0) return null
+  if (app1 < 0) return { error: 'no APP1' }
 
-  // 2. TIFF header: byte order + magic + IFD0 offset
-  const tiff = app1 + 6 // skip "Exif\0\0"
-  const le = buf[tiff] === 0x49 // "II" = little-endian, "MM" = big-endian
-  if (readU16(buf, tiff + 2, le) !== 42) return null // TIFF magic
+  const tiff = app1 + 6
+  const le = buf[tiff] === 0x49
+  if (readU16(buf, tiff + 2, le) !== 42) return { error: 'bad TIFF magic', tiff, bytes: hex(buf, tiff, 8) }
 
-  const ifd0Offset = tiff + readU32(buf, tiff + 4, le)
-
-  // 3. Walk IFD0 to find GPS IFD pointer (tag 0x8825)
+  const ifd0RelOffset = readU32(buf, tiff + 4, le)
+  const ifd0Offset = tiff + ifd0RelOffset
   const ifd0Count = readU16(buf, ifd0Offset, le)
+
+  // collect all IFD0 tags
+  const ifd0Tags: Record<string, string> = {}
   let gpsIfdOffset = -1
   for (let i = 0; i < ifd0Count; i++) {
     const entry = ifd0Offset + 2 + i * 12
     if (entry + 12 > buf.length) break
     const tag = readU16(buf, entry, le)
+    const type = readU16(buf, entry + 2, le)
+    const count = readU32(buf, entry + 4, le)
+    const valOrOff = readU32(buf, entry + 8, le)
+    ifd0Tags[`0x${tag.toString(16).padStart(4,'0')}`] = `type=${type} count=${count} val/off=${valOrOff}`
     if (tag === 0x8825) {
-      gpsIfdOffset = tiff + readU32(buf, entry + 8, le)
-      break
+      gpsIfdOffset = tiff + valOrOff
     }
   }
-  if (gpsIfdOffset < 0) return null
 
-  // 4. Walk GPS IFD for tags 1-4 (LatRef, Lat, LngRef, Lng)
+  if (gpsIfdOffset < 0) return { error: 'no GPS IFD in IFD0', tiff, le, ifd0Tags }
+
   const gpsCount = readU16(buf, gpsIfdOffset, le)
+  const gpsTags: Record<string, string> = {}
   let latRef = 'N', lngRef = 'E'
-  let latOffset = -1, lngOffset = -1
+  let latRelOffset = -1, lngRelOffset = -1
 
   for (let i = 0; i < gpsCount; i++) {
     const entry = gpsIfdOffset + 2 + i * 12
     if (entry + 12 > buf.length) break
     const tag = readU16(buf, entry, le)
-    if (tag === 0x0001) { // GPSLatitudeRef
-      latRef = String.fromCharCode(buf[entry + 8])
-    } else if (tag === 0x0002) { // GPSLatitude (3 RATIONAL)
-      latOffset = tiff + readU32(buf, entry + 8, le)
-    } else if (tag === 0x0003) { // GPSLongitudeRef
-      lngRef = String.fromCharCode(buf[entry + 8])
-    } else if (tag === 0x0004) { // GPSLongitude (3 RATIONAL)
-      lngOffset = tiff + readU32(buf, entry + 8, le)
-    }
+    const type = readU16(buf, entry + 2, le)
+    const count = readU32(buf, entry + 4, le)
+    const valOrOff = readU32(buf, entry + 8, le)
+    gpsTags[`0x${tag.toString(16).padStart(4,'0')}`] = `type=${type} count=${count} val/off=${valOrOff}`
+    if (tag === 0x0001) latRef = String.fromCharCode(buf[entry + 8])
+    else if (tag === 0x0002) latRelOffset = valOrOff
+    else if (tag === 0x0003) lngRef = String.fromCharCode(buf[entry + 8])
+    else if (tag === 0x0004) lngRelOffset = valOrOff
   }
 
-  if (latOffset < 0 || lngOffset < 0) return null
-  if (latOffset + 24 > buf.length || lngOffset + 24 > buf.length) return null
+  const latOffset = latRelOffset >= 0 ? tiff + latRelOffset : -1
+  const lngOffset = lngRelOffset >= 0 ? tiff + lngRelOffset : -1
 
-  // 5. Convert DMS rationals → decimal degrees
-  const lat =
-    readRational(buf, latOffset, le) +
-    readRational(buf, latOffset + 8, le) / 60 +
-    readRational(buf, latOffset + 16, le) / 3600
+  const latBytes = latOffset >= 0 && latOffset + 24 <= buf.length ? hex(buf, latOffset, 24) : 'OUT_OF_RANGE'
+  const lngBytes = lngOffset >= 0 && lngOffset + 24 <= buf.length ? hex(buf, lngOffset, 24) : 'OUT_OF_RANGE'
 
-  const lng =
-    readRational(buf, lngOffset, le) +
-    readRational(buf, lngOffset + 8, le) / 60 +
-    readRational(buf, lngOffset + 16, le) / 3600
+  let latitude: number | null = null
+  let longitude: number | null = null
+  if (latOffset >= 0 && latOffset + 24 <= buf.length) {
+    const lat = readRational(buf, latOffset, le) + readRational(buf, latOffset + 8, le) / 60 + readRational(buf, latOffset + 16, le) / 3600
+    latitude = latRef === 'S' ? -lat : lat
+  }
+  if (lngOffset >= 0 && lngOffset + 24 <= buf.length) {
+    const lng = readRational(buf, lngOffset, le) + readRational(buf, lngOffset + 8, le) / 60 + readRational(buf, lngOffset + 16, le) / 3600
+    longitude = lngRef === 'W' ? -lng : lng
+  }
 
   return {
-    latitude: latRef === 'S' ? -lat : lat,
-    longitude: lngRef === 'W' ? -lng : lng,
+    bufLen: buf.length,
+    tiff,
+    le,
+    ifd0RelOffset,
+    ifd0Count,
+    gpsIfdOffset,
+    gpsCount,
+    gpsTags,
+    latRef,
+    lngRef,
+    latRelOffset,
+    lngRelOffset,
+    latOffset,
+    lngOffset,
+    latBytes,
+    lngBytes,
+    latitude,
+    longitude,
   }
 }
 
@@ -110,21 +132,15 @@ export async function GET(
     const auth = getAuth()
     const drive = google.drive({ version: 'v3', auth })
 
-    // 1MB — enough to cover Samsung's large maker notes before GPS IFD values
     const res = await drive.files.get(
       { fileId, alt: 'media' },
       { responseType: 'arraybuffer', headers: { Range: 'bytes=0-1048575' } }
     )
 
     const buffer = Buffer.from(res.data as ArrayBuffer)
-    const gps = parseGps(buffer)
-
-    if (!gps || !Number.isFinite(gps.latitude) || !Number.isFinite(gps.longitude)) {
-      return Response.json({ hasGps: false })
-    }
-
-    return Response.json({ hasGps: true, latitude: gps.latitude, longitude: gps.longitude })
+    const debug = parseGpsDebug(buffer)
+    return Response.json(debug)
   } catch (err) {
-    return Response.json({ hasGps: false, error: String(err) })
+    return Response.json({ error: String(err) })
   }
 }
