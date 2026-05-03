@@ -1,0 +1,144 @@
+'use client'
+
+import type { Layout, SortOption } from '@/types'
+import { useDarkMode } from '@/hooks/useDarkMode'
+
+interface ToolbarProps {
+  albumName: string
+  albumDescription: string
+  imageCount: number
+  videoCount: number
+  layout: Layout
+  size: number
+  sort: SortOption
+  filterOpen: boolean
+  onLayoutChange: (l: Layout) => void
+  onSizeChange: (s: number) => void
+  onSortChange: (s: SortOption) => void
+  onFilterToggle: () => void
+}
+
+const LAYOUTS: { value: Layout; icon: string; label: string }[] = [
+  { value: 'rows', icon: '▤', label: 'שורות' },
+  { value: 'columns', icon: '▥', label: 'עמודות' },
+  { value: 'masonry', icon: '▦', label: 'Masonry' },
+]
+
+const SORTS: { value: SortOption; label: string }[] = [
+  { value: 'date-desc', label: 'תאריך — מהחדש לישן' },
+  { value: 'date-asc', label: 'תאריך — מהישן לחדש' },
+  { value: 'name-asc', label: 'שם — א עד ת' },
+  { value: 'name-desc', label: 'שם — ת עד א' },
+]
+
+export default function Toolbar({
+  albumName, albumDescription, imageCount, videoCount,
+  layout, size, sort, filterOpen,
+  onLayoutChange, onSizeChange, onSortChange, onFilterToggle,
+}: ToolbarProps) {
+  const { dark, toggle } = useDarkMode()
+
+  const counter =
+    [imageCount && `${imageCount} תמונות`, videoCount && `${videoCount} סרטונים`]
+      .filter(Boolean)
+      .join(' · ')
+
+  return (
+    <header
+      className="sticky top-0 z-30 px-4 py-3"
+      style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
+    >
+      {/* top row */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold leading-tight truncate">{albumName}</h1>
+          {albumDescription && (
+            <p className="text-sm mt-0.5 truncate" style={{ color: 'var(--muted)' }}>
+              {albumDescription}
+            </p>
+          )}
+          {counter && (
+            <p className="text-xs mt-0.5 hidden sm:block" style={{ color: 'var(--muted)' }}>
+              {counter}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={toggle}
+          className="shrink-0 text-xl p-1.5 rounded-lg hover:opacity-70 transition-opacity"
+          title={dark ? 'מצב בהיר' : 'מצב כהה'}
+          aria-label={dark ? 'מצב בהיר' : 'מצב כהה'}
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
+      </div>
+
+      {/* controls row */}
+      <div className="flex items-center gap-3 mt-3 flex-wrap">
+        {/* layout */}
+        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          {LAYOUTS.map((l) => (
+            <button
+              key={l.value}
+              onClick={() => onLayoutChange(l.value)}
+              title={l.label}
+              className="px-2.5 py-1.5 text-sm transition-colors"
+              style={{
+                background: layout === l.value ? 'var(--muted)' : 'var(--surface)',
+                color: layout === l.value ? 'var(--bg)' : 'var(--fg)',
+              }}
+            >
+              {l.icon}
+            </button>
+          ))}
+        </div>
+
+        {/* size slider */}
+        <div className="flex items-center gap-2 flex-1 min-w-[120px] max-w-[200px]">
+          <span className="text-xs opacity-50">🔍</span>
+          <input
+            type="range" min={10} max={100} value={size}
+            onChange={(e) => onSizeChange(Number(e.target.value))}
+            className="flex-1 accent-blue-500"
+          />
+        </div>
+
+        {/* sort */}
+        <select
+          value={sort}
+          onChange={(e) => onSortChange(e.target.value as SortOption)}
+          className="text-sm rounded-lg px-2 py-1.5 outline-none"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+        >
+          {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+
+        {/* filter */}
+        <button
+          onClick={onFilterToggle}
+          className="text-sm px-3 py-1.5 rounded-lg transition-colors"
+          style={{
+            background: filterOpen ? 'var(--muted)' : 'var(--surface)',
+            border: '1px solid var(--border)',
+            color: filterOpen ? 'var(--bg)' : 'var(--fg)',
+          }}
+        >
+          🔎 סינון
+        </button>
+
+        {/* fullscreen */}
+        <button
+          onClick={() => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen()
+            else document.exitFullscreen()
+          }}
+          className="text-sm px-2.5 py-1.5 rounded-lg transition-colors"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          title="מסך מלא"
+        >
+          ⛶
+        </button>
+      </div>
+    </header>
+  )
+}
