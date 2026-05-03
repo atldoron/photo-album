@@ -19,7 +19,8 @@ export async function GET() {
     pageSize: 20,
   })
 
-  const files = (response.data.files ?? []).slice(0, 10).map((f) => ({
+  const files = (response.data.files ?? []).slice(0, 20).map((f) => ({
+    id: f.id,
     name: f.name,
     hasImageMeta: !!f.imageMediaMetadata,
     meta: f.imageMediaMetadata,
