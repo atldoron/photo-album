@@ -32,8 +32,8 @@ export async function GET(
     const lat: number | undefined = exifData?.latitude
     const lng: number | undefined = exifData?.longitude
 
-    if (!lat || !lng) {
-      return Response.json({ hasGps: false })
+    if (lat == null || lng == null) {
+      return Response.json({ hasGps: false, lat, lng, type: typeof lat })
     }
 
     return Response.json({
