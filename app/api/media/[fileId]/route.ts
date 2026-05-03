@@ -28,19 +28,29 @@ export async function GET(
 
     const buffer = Buffer.from(res.data as ArrayBuffer)
 
-    const exifData = await exifr.parse(buffer, { gps: true, xmp: false, iptc: false, icc: false })
-    const lat: number | undefined = exifData?.latitude
-    const lng: number | undefined = exifData?.longitude
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const exifData: any = await exifr.parse(buffer, { gps: true, xmp: false, iptc: false, icc: false })
 
-    if (lat == null || lng == null) {
-      return Response.json({ hasGps: false, lat, lng, type: typeof lat })
+    // exifr with gps:true computes latitude/longitude — prefer those
+    let lat: number | undefined = typeof exifData?.latitude === 'number' ? exifData.latitude : undefined
+    let lng: number | undefined = typeof exifData?.longitude === 'number' ? exifData.longitude : undefined
+
+    // Fallback: manual DMS → decimal conversion from raw GPS tags
+    if ((lat == null || lng == null) && exifData?.GPSLatitude && exifData?.GPSLongitude) {
+      const [d, m, s] = exifData.GPSLatitude as number[]
+      lat = d + m / 60 + s / 3600
+      if (exifData.GPSLatitudeRef === 'S') lat = -lat
+
+      const [ld, lm, ls] = exifData.GPSLongitude as number[]
+      lng = ld + lm / 60 + ls / 3600
+      if (exifData.GPSLongitudeRef === 'W') lng = -lng
     }
 
-    return Response.json({
-      hasGps: true,
-      latitude: lat,
-      longitude: lng,
-    })
+    if (lat == null || lng == null) {
+      return Response.json({ hasGps: false })
+    }
+
+    return Response.json({ hasGps: true, latitude: lat, longitude: lng })
   } catch (err) {
     return Response.json({ hasGps: false, error: String(err) })
   }
