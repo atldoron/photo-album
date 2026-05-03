@@ -20,10 +20,10 @@ export async function GET(
     const auth = getAuth()
     const drive = google.drive({ version: 'v3', auth })
 
-    // Download first 128KB — JPEG EXIF (incl. GPS) is always in the first few KB
+    // Download first 1MB — Samsung maker notes can push GPS offsets beyond 128KB
     const res = await drive.files.get(
       { fileId, alt: 'media' },
-      { responseType: 'arraybuffer', headers: { Range: 'bytes=0-131071' } }
+      { responseType: 'arraybuffer', headers: { Range: 'bytes=0-1048575' } }
     )
 
     const buffer = Buffer.from(res.data as ArrayBuffer)
