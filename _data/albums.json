@@ -1,8 +1,8 @@
 [
   {
     "id": "thailand",
-    "name": "בתאילנד",
-    "description": "",
+    "name": "תאילנד",
+    "description": "טיול לתאילנד ",
     "driveFolder": "https://drive.google.com/drive/folders/1UPlRzCkW7CynEyVe7NA7TFc1qixBmrIi?usp=sharing",
     "defaultLayout": "rows",
     "defaultSize": 50,
