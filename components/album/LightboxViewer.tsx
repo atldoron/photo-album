@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import Lightbox, { SlideImage } from 'yet-another-react-lightbox'
 import Fullscreen from 'yet-another-react-lightbox/plugins/fullscreen'
 import Download from 'yet-another-react-lightbox/plugins/download'
@@ -110,8 +111,8 @@ export default function LightboxViewer({ items, index, onClose, isFav, onToggleF
         }}
       />
 
-      {/* Info panel overlay */}
-      {showInfo && current && (
+      {/* Info panel overlay — rendered in a portal so it sits above YARL's own portal */}
+      {showInfo && current && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -129,7 +130,8 @@ export default function LightboxViewer({ items, index, onClose, isFav, onToggleF
           }}
         >
           <InfoPanel item={current} />
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
