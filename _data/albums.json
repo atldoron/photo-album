@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "thailand",
+    "name": "בתאילנד",
+    "description": "",
+    "driveFolder": "https://drive.google.com/drive/folders/1UPlRzCkW7CynEyVe7NA7TFc1qixBmrIi?usp=sharing",
+    "defaultLayout": "rows",
+    "defaultSize": 50,
+    "defaultSort": "date-desc",
+    "createdAt": "2026-05-03T06:38:10.406Z",
+    "order": 0
+  }
+]
