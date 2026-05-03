@@ -47,7 +47,17 @@ export async function GET(
     }
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return Response.json({ hasGps: false })
+      return Response.json({
+        hasGps: false,
+        debug: {
+          rawLat: exifData?.GPSLatitude,
+          rawLng: exifData?.GPSLongitude,
+          latRef: exifData?.GPSLatitudeRef,
+          lngRef: exifData?.GPSLongitudeRef,
+          computedLat: exifData?.latitude,
+          computedLng: exifData?.longitude,
+        },
+      })
     }
 
     return Response.json({ hasGps: true, latitude: lat, longitude: lng })
