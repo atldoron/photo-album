@@ -1,10 +1,9 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import { RowsPhotoAlbum, ColumnsPhotoAlbum, MasonryPhotoAlbum } from 'react-photo-album'
+import { RowsPhotoAlbum, MasonryPhotoAlbum } from 'react-photo-album'
 import type { Photo, RenderPhotoProps, RenderPhotoContext } from 'react-photo-album'
 import 'react-photo-album/rows.css'
-import 'react-photo-album/columns.css'
 import 'react-photo-album/masonry.css'
 import type { MediaItem, Layout } from '@/types'
 
@@ -109,11 +108,8 @@ export default function GalleryGrid({
 
   return (
     <div className="p-2 flex-1">
-      {layout === 'rows' && (
+      {(layout === 'rows' || layout === 'columns') && (
         <RowsPhotoAlbum {...sharedProps} targetRowHeight={targetRowHeight} />
-      )}
-      {layout === 'columns' && (
-        <ColumnsPhotoAlbum {...sharedProps} columns={columns} />
       )}
       {layout === 'masonry' && (
         <MasonryPhotoAlbum {...sharedProps} columns={columns} />

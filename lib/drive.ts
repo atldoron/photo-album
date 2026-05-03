@@ -16,11 +16,11 @@ export function extractFolderId(folderUrl: string): string {
 }
 
 function getAuth() {
+  const sa = process.env.GOOGLE_SERVICE_ACCOUNT?.replace(/^﻿/, '')
+  if (!sa) throw new Error('GOOGLE_SERVICE_ACCOUNT env var is not set')
+  const creds = JSON.parse(sa)
   return new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
+    credentials: creds,
     scopes: ['https://www.googleapis.com/auth/drive.readonly'],
   })
 }
@@ -71,7 +71,7 @@ export async function getAlbumMedia(folderUrl: string): Promise<MediaItem[]> {
         thumbnailUrl: `https://drive.google.com/thumbnail?id=${file.id}&sz=w400`,
         viewUrl:
           type === 'image'
-            ? `https://drive.google.com/uc?id=${file.id}&export=view`
+            ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`
             : `https://drive.google.com/file/d/${file.id}/preview`,
         downloadUrl: `https://drive.google.com/uc?id=${file.id}&export=download`,
         width,

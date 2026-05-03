@@ -7,13 +7,12 @@ import type { Album, Layout, SortOption } from '@/types'
 interface AlbumFormProps {
   open: boolean
   onClose: () => void
-  onSave: (data: Omit<Album, 'createdAt' | 'order'>) => Promise<void>
+  onSave: (data: Omit<Album, 'createdAt' | 'order'>, originalId?: string) => Promise<void>
   initial?: Album
 }
 
 const LAYOUTS: { value: Layout; label: string }[] = [
   { value: 'rows', label: 'שורות (Rows)' },
-  { value: 'columns', label: 'עמודות (Columns)' },
   { value: 'masonry', label: 'Masonry' },
 ]
 
@@ -35,7 +34,7 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
     name: initial?.name ?? '',
     description: initial?.description ?? '',
     driveFolder: initial?.driveFolder ?? '',
-    defaultLayout: initial?.defaultLayout ?? 'rows',
+    defaultLayout: (initial?.defaultLayout === 'columns' ? 'rows' : initial?.defaultLayout) ?? 'rows',
     defaultSize: initial?.defaultSize ?? 50,
     defaultSort: initial?.defaultSort ?? 'date-desc',
   })
@@ -44,6 +43,8 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
+
+  const originalId = initial?.id
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -58,11 +59,10 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
     setSaving(true)
     setError('')
     try {
-      await onSave({
-        ...form,
-        defaultLayout: form.defaultLayout as Layout,
-        defaultSort: form.defaultSort as SortOption,
-      })
+      await onSave(
+        { ...form, defaultLayout: form.defaultLayout as Layout, defaultSort: form.defaultSort as SortOption },
+        originalId,
+      )
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'שגיאה בשמירה')
@@ -80,10 +80,18 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
             onChange={(e) => set('name', e.target.value)} placeholder="למשל: חתונה 2024" />
         </div>
         <div>
-          <label className={labelCls}>מזהה URL * <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(באנגלית, ללא רווחים)</span></label>
+          <label className={labelCls}>
+            מזהה URL *{' '}
+            <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(באנגלית, ללא רווחים)</span>
+          </label>
           <input className={inputCls} style={inputStyle} value={form.id}
             onChange={(e) => set('id', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-            placeholder="wedding-2024" disabled={!!initial} />
+            placeholder="wedding-2024" />
+          {initial && form.id !== originalId && (
+            <p className="text-xs mt-1" style={{ color: '#f59e0b' }}>
+              שינוי המזהה ישנה את כתובת URL של האלבום. קישורים ישנים יפסיקו לעבוד.
+            </p>
+          )}
         </div>
         <div>
           <label className={labelCls}>תיאור</label>

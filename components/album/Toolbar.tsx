@@ -20,7 +20,6 @@ interface ToolbarProps {
 
 const LAYOUTS: { value: Layout; icon: string; label: string }[] = [
   { value: 'rows', icon: '▤', label: 'שורות' },
-  { value: 'columns', icon: '▥', label: 'עמודות' },
   { value: 'masonry', icon: '▦', label: 'Masonry' },
 ]
 

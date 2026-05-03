@@ -15,6 +15,17 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const existing = await getAlbum(id)
   if (!existing) return Response.json({ error: 'Not found' }, { status: 404 })
   const body = await req.json()
+  const newId: string = body.id && /^[a-z0-9-]+$/.test(body.id) ? body.id : id
+
+  if (newId !== id) {
+    const conflict = await getAlbum(newId)
+    if (conflict) return Response.json({ error: 'מזהה URL זה כבר בשימוש' }, { status: 409 })
+    await deleteAlbum(id)
+    const renamed = { ...existing, ...body, id: newId }
+    await setAlbum(renamed)
+    return Response.json(renamed)
+  }
+
   const updated = { ...existing, ...body, id }
   await setAlbum(updated)
   return Response.json(updated)

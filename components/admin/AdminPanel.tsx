@@ -41,15 +41,16 @@ export default function AdminPanel({ initialAlbums }: AdminPanelProps) {
     setAlbums((prev) => [...prev, created])
   }, [])
 
-  const handleUpdate = useCallback(async (data: Omit<Album, 'createdAt' | 'order'>) => {
-    const res = await fetch(`/api/albums/${data.id}`, {
+  const handleUpdate = useCallback(async (data: Omit<Album, 'createdAt' | 'order'>, originalId?: string) => {
+    const urlId = originalId ?? data.id
+    const res = await fetch(`/api/albums/${urlId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
     if (!res.ok) throw new Error(await res.text())
     const updated: Album = await res.json()
-    setAlbums((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+    setAlbums((prev) => prev.map((a) => (a.id === urlId ? updated : a)))
     setEditAlbum(null)
   }, [])
 
