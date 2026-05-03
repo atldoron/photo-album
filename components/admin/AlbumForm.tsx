@@ -34,7 +34,7 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
     name: initial?.name ?? '',
     description: initial?.description ?? '',
     driveFolder: initial?.driveFolder ?? '',
-    defaultLayout: (initial?.defaultLayout === 'columns' ? 'rows' : initial?.defaultLayout) ?? 'rows',
+    defaultLayout: ((initial?.defaultLayout === 'columns' ? 'rows' : initial?.defaultLayout) ?? 'rows') as Layout,
     defaultSize: initial?.defaultSize ?? 50,
     defaultSort: initial?.defaultSort ?? 'date-desc',
   })
