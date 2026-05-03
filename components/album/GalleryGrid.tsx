@@ -115,7 +115,7 @@ export default function GalleryGrid({
         <RowsPhotoAlbum
           {...sharedProps}
           targetRowHeight={targetRowHeight}
-          rowConstraints={{ maxPhotos: columns }}
+          rowConstraints={{ minPhotos: columns, maxPhotos: columns }}
         />
       )}
       {layout === 'masonry' && (
