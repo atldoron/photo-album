@@ -1,5 +1,5 @@
 export type Layout = 'rows' | 'columns' | 'masonry'
-export type SortOption = 'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'
+export type SortOption = 'date-desc' | 'date-asc'
 export type MediaType = 'all' | 'image' | 'video'
 
 export interface Album {

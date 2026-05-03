@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Modal from '@/components/ui/Modal'
-import type { Album, Layout, SortOption } from '@/types'
+import type { Album, Layout } from '@/types'
 
 interface AlbumFormProps {
   open: boolean
@@ -16,12 +16,6 @@ const LAYOUTS: { value: Layout; label: string }[] = [
   { value: 'masonry', label: 'Masonry' },
 ]
 
-const SORTS: { value: SortOption; label: string }[] = [
-  { value: 'date-desc', label: 'תאריך צילום — מהחדש לישן' },
-  { value: 'date-asc', label: 'תאריך צילום — מהישן לחדש' },
-  { value: 'name-asc', label: 'שם קובץ — א׳ עד ת׳' },
-  { value: 'name-desc', label: 'שם קובץ — ת׳ עד א׳' },
-]
 
 const inputCls =
   'w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
@@ -110,13 +104,6 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
             <select className={inputCls} style={inputStyle} value={form.defaultLayout}
               onChange={(e) => set('defaultLayout', e.target.value as Layout)}>
               {LAYOUTS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>מיון ברירת מחדל</label>
-            <select className={inputCls} style={inputStyle} value={form.defaultSort}
-              onChange={(e) => set('defaultSort', e.target.value as SortOption)}>
-              {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
         </div>

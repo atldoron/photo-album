@@ -2,16 +2,11 @@ import type { MediaItem, SortOption } from '@/types'
 
 export function sortMedia(items: MediaItem[], sort: SortOption): MediaItem[] {
   return [...items].sort((a, b) => {
-    switch (sort) {
-      case 'date-desc':
-        return (b.takenAt ?? b.name).localeCompare(a.takenAt ?? a.name)
-      case 'date-asc':
-        return (a.takenAt ?? a.name).localeCompare(b.takenAt ?? b.name)
-      case 'name-asc':
-        return a.name.localeCompare(b.name, 'he')
-      case 'name-desc':
-        return b.name.localeCompare(a.name, 'he')
-    }
+    const dateA = a.takenAt ?? a.name
+    const dateB = b.takenAt ?? b.name
+    return sort === 'date-desc'
+      ? dateB.localeCompare(dateA)
+      : dateA.localeCompare(dateB)
   })
 }
 

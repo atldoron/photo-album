@@ -23,12 +23,6 @@ const LAYOUTS: { value: Layout; icon: string; label: string }[] = [
   { value: 'masonry', icon: '▦', label: 'Masonry' },
 ]
 
-const SORTS: { value: SortOption; label: string }[] = [
-  { value: 'date-desc', label: 'תאריך — מהחדש לישן' },
-  { value: 'date-asc', label: 'תאריך — מהישן לחדש' },
-  { value: 'name-asc', label: 'שם — א עד ת' },
-  { value: 'name-desc', label: 'שם — ת עד א' },
-]
 
 export default function Toolbar({
   albumName, albumDescription, imageCount, videoCount,
@@ -94,15 +88,15 @@ export default function Toolbar({
           />
         </div>
 
-        {/* sort */}
-        <select
-          value={sort}
-          onChange={(e) => onSortChange(e.target.value as SortOption)}
-          className="text-sm rounded-lg px-2 py-1.5 outline-none"
+        {/* sort toggle */}
+        <button
+          onClick={() => onSortChange(sort === 'date-desc' ? 'date-asc' : 'date-desc')}
+          title={sort === 'date-desc' ? 'מהחדש לישן — לחץ לסדר עולה' : 'מהישן לחדש — לחץ לסדר יורד'}
+          className="text-sm px-2.5 py-1.5 rounded-lg transition-colors"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
         >
-          {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
+          {sort === 'date-desc' ? '📅 ▼' : '📅 ▲'}
+        </button>
 
         {/* filter */}
         <button
