@@ -49,8 +49,11 @@ export default function GalleryGrid({
     favStatus: isFav(item.id),
   }))
 
-  const targetRowHeight = Math.round(100 + size * 2.5)
-  const columns = Math.max(2, Math.round(8 - size / 15))
+  // Single source of truth: columns count from size slider
+  const columns = Math.max(2, Math.round(10 - size / 12.5))
+  // targetRowHeight as a function of container width keeps rows consistent with masonry
+  const targetRowHeight = (containerWidth: number) =>
+    Math.round(containerWidth / (columns * 1.5))
 
   function renderPhoto(
     props: RenderPhotoProps,
@@ -109,7 +112,11 @@ export default function GalleryGrid({
   return (
     <div className="p-2 flex-1">
       {(layout === 'rows' || layout === 'columns') && (
-        <RowsPhotoAlbum {...sharedProps} targetRowHeight={targetRowHeight} />
+        <RowsPhotoAlbum
+          {...sharedProps}
+          targetRowHeight={targetRowHeight}
+          rowConstraints={{ maxPhotos: columns }}
+        />
       )}
       {layout === 'masonry' && (
         <MasonryPhotoAlbum {...sharedProps} columns={columns} />
