@@ -170,12 +170,12 @@ export default function Toolbar({
         {divider}
 
         {/* size slider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, width: '130px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <span style={{ fontSize: '12px', opacity: 0.6, whiteSpace: 'nowrap' }}>גודל</span>
           <input
             type="range" min={10} max={100} value={size}
             onChange={(e) => onSizeChange(Number(e.target.value))}
-            style={{ flex: 1, accentColor: 'var(--fg)' }}
+            style={{ width: '110px', accentColor: 'var(--fg)', display: 'block' }}
           />
         </div>
 
