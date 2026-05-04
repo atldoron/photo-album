@@ -89,11 +89,11 @@ export default function GalleryGrid({
           onClick={(e) => { e.stopPropagation(); onToggleFav(item.id) }}
           className="absolute top-1 end-1 text-lg leading-none z-10 transition-opacity"
           style={{
-            opacity: photo.favStatus ? 1 : 0,
+            opacity: photo.favStatus ? 1 : 0.45,
             textShadow: '0 1px 4px rgba(0,0,0,0.9)',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = photo.favStatus ? '1' : '0')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = photo.favStatus ? '1' : '0.45')}
           aria-label={photo.favStatus ? 'הסר ממועדפים' : 'הוסף למועדפים'}
         >
           {photo.favStatus ? '⭐' : '☆'}
