@@ -92,7 +92,7 @@ export default function Toolbar({
         padding: '0 16px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', height: '44px' }}>
+      <div className="flex items-center h-11" style={{ gap: '8px' }}>
 
         {/* title + meta */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
@@ -105,58 +105,40 @@ export default function Toolbar({
             </span>
           )}
           {counter && (
-            <span style={{ fontSize: '12px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+            <span className="hidden sm:block" style={{ fontSize: '12px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
               {counter}
             </span>
           )}
         </div>
 
-        {divider}
+        {/* divider — desktop only */}
+        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
         {/* layout dropdown */}
         <div style={{ position: 'relative', flexShrink: 0 }} ref={layoutRef}>
-          <button
-            onClick={() => setLayoutOpen((v) => !v)}
-            style={btn}
-            title="בחר תצוגה"
-          >
-            <span style={{ fontSize: '12px', opacity: 0.7 }}>תצוגה</span>
+          <button onClick={() => setLayoutOpen((v) => !v)} style={btn} title="בחר תצוגה">
+            <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.7 }}>תצוגה</span>
             {LAYOUTS.find((l) => l.value === layout)?.icon}
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m6 9 6 6 6-6"/>
             </svg>
           </button>
           {layoutOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 4px)',
-                right: 0,
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                zIndex: 50,
-                minWidth: '130px',
-              }}
-            >
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: '8px', overflow: 'hidden', zIndex: 50, minWidth: '130px',
+            }}>
               {LAYOUTS.map((l) => (
-                <button
-                  key={l.value}
+                <button key={l.value}
                   onClick={() => { onLayoutChange(l.value); setLayoutOpen(false) }}
                   title={l.label}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '8px 12px',
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    width: '100%', padding: '8px 12px',
                     background: layout === l.value ? 'var(--muted)' : 'transparent',
                     color: layout === l.value ? 'var(--bg)' : 'var(--fg)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    direction: 'rtl',
+                    border: 'none', cursor: 'pointer', fontSize: '13px', direction: 'rtl',
                   }}
                 >
                   {l.icon}
@@ -167,10 +149,9 @@ export default function Toolbar({
           )}
         </div>
 
-        {divider}
-
-        {/* size slider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        {/* size slider — desktop only */}
+        <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)' }} />
           <span style={{ fontSize: '12px', opacity: 0.6, whiteSpace: 'nowrap' }}>גודל</span>
           <input
             type="range" min={10} max={100} value={size}
@@ -179,7 +160,8 @@ export default function Toolbar({
           />
         </div>
 
-        {divider}
+        {/* divider — desktop only */}
+        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
         {/* sort */}
         <button
@@ -187,7 +169,7 @@ export default function Toolbar({
           title={sort === 'date-desc' ? 'מהחדש לישן — לחץ לסדר עולה' : 'מהישן לחדש — לחץ לסדר יורד'}
           style={btn}
         >
-          מיון
+          <span className="hidden sm:inline">מיון</span>
           {sort === 'date-desc' ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
@@ -210,16 +192,18 @@ export default function Toolbar({
             color: filterOpen ? 'var(--bg)' : 'var(--fg)',
           }}
         >
-          סינון
+          <span className="hidden sm:inline">סינון</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 3H2l8 9.46V19l4 2V12.46L22 3Z"/>
           </svg>
         </button>
 
-        {divider}
+        {/* divider — desktop only */}
+        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        {/* fullscreen */}
+        {/* fullscreen — desktop only */}
         <button
+          className="hidden sm:flex"
           onClick={() => {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen()
             else document.exitFullscreen()
@@ -231,11 +215,7 @@ export default function Toolbar({
         </button>
 
         {/* dark mode */}
-        <button
-          onClick={toggle}
-          style={btn}
-          title={dark ? 'מצב בהיר' : 'מצב כהה'}
-        >
+        <button onClick={toggle} style={btn} title={dark ? 'מצב בהיר' : 'מצב כהה'}>
           {dark ? '☀️' : '🌙'}
         </button>
 

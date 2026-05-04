@@ -49,11 +49,15 @@ export default function GalleryGrid({
     favStatus: isFav(item.id),
   }))
 
-  // Single source of truth: columns count from size slider
+  // Desktop columns from slider; cap on mobile so images aren't tiny
   const columns = Math.max(2, Math.round(10 - size / 12.5))
-  // targetRowHeight as a function of container width keeps rows consistent with masonry
+  const responsiveColumns = (containerWidth: number) => {
+    if (containerWidth < 480) return Math.min(columns, 2)
+    if (containerWidth < 720) return Math.min(columns, 3)
+    return columns
+  }
   const targetRowHeight = (containerWidth: number) =>
-    Math.round(containerWidth / (columns * 1.5))
+    Math.round(containerWidth / (responsiveColumns(containerWidth) * 1.5))
 
   function renderPhoto(
     props: RenderPhotoProps,
@@ -115,11 +119,14 @@ export default function GalleryGrid({
         <RowsPhotoAlbum
           {...sharedProps}
           targetRowHeight={targetRowHeight}
-          rowConstraints={{ minPhotos: columns, maxPhotos: columns }}
+          rowConstraints={(containerWidth) => {
+            const cols = responsiveColumns(containerWidth)
+            return { minPhotos: cols, maxPhotos: cols }
+          }}
         />
       )}
       {layout === 'masonry' && (
-        <MasonryPhotoAlbum {...sharedProps} columns={columns} />
+        <MasonryPhotoAlbum {...sharedProps} columns={responsiveColumns} />
       )}
 
       {/* Infinite scroll sentinel + skeleton */}
