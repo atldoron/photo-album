@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import type { Layout, SortOption } from '@/types'
 import { useDarkMode } from '@/hooks/useDarkMode'
 
@@ -18,9 +19,26 @@ interface ToolbarProps {
   onFilterToggle: () => void
 }
 
-const LAYOUTS: { value: Layout; icon: string; label: string }[] = [
-  { value: 'rows', icon: '▤', label: 'שורות' },
-  { value: 'masonry', icon: '▦', label: 'Masonry' },
+const LAYOUTS: { value: Layout; label: string; icon: React.ReactNode }[] = [
+  {
+    value: 'rows',
+    label: 'שורות — תמונות בגודל אחיד בשורות',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <rect x="3" y="3" width="18" height="5" rx="1"/><rect x="3" y="10" width="18" height="5" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/>
+      </svg>
+    ),
+  },
+  {
+    value: 'masonry',
+    label: 'פסיפס — תמונות בגבהים שונים',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <rect x="3" y="3" width="8" height="11" rx="1"/><rect x="13" y="3" width="8" height="7" rx="1"/>
+        <rect x="3" y="16" width="8" height="5" rx="1"/><rect x="13" y="12" width="8" height="9" rx="1"/>
+      </svg>
+    ),
+  },
 ]
 
 const btnBase: React.CSSProperties = {
@@ -35,6 +53,18 @@ export default function Toolbar({
   onLayoutChange, onSizeChange, onSortChange, onFilterToggle,
 }: ToolbarProps) {
   const { dark, toggle } = useDarkMode()
+  const [layoutOpen, setLayoutOpen] = useState(false)
+  const layoutRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (layoutRef.current && !layoutRef.current.contains(e.target as Node)) {
+        setLayoutOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   const counter =
     [imageCount && `${imageCount} תמונות`, videoCount && `${videoCount} סרטונים`]
@@ -71,22 +101,48 @@ export default function Toolbar({
         {/* divider */}
         <div className="h-5 w-px shrink-0" style={{ background: 'var(--border)' }} />
 
-        {/* layout toggle */}
-        <div className="flex rounded-md overflow-hidden shrink-0" style={{ border: '1px solid var(--border)' }}>
-          {LAYOUTS.map((l) => (
-            <button
-              key={l.value}
-              onClick={() => onLayoutChange(l.value)}
-              title={l.label}
-              className="px-2.5 py-1 text-sm transition-colors"
+        {/* layout dropdown */}
+        <div className="relative shrink-0" ref={layoutRef}>
+          <button
+            onClick={() => setLayoutOpen((v) => !v)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm transition-colors"
+            style={btnBase}
+            title="בחר תצוגה"
+          >
+            {LAYOUTS.find((l) => l.value === layout)?.icon}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          {layoutOpen && (
+            <div
+              className="absolute z-50 rounded-md overflow-hidden"
               style={{
-                background: layout === l.value ? 'var(--muted)' : 'var(--surface)',
-                color: layout === l.value ? 'var(--bg)' : 'var(--fg)',
+                top: 'calc(100% + 4px)',
+                right: 0,
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                minWidth: '130px',
               }}
             >
-              {l.icon}
-            </button>
-          ))}
+              {LAYOUTS.map((l) => (
+                <button
+                  key={l.value}
+                  onClick={() => { onLayoutChange(l.value); setLayoutOpen(false) }}
+                  title={l.label}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-right transition-colors hover:opacity-80"
+                  style={{
+                    background: layout === l.value ? 'var(--muted)' : 'transparent',
+                    color: layout === l.value ? 'var(--bg)' : 'var(--fg)',
+                    direction: 'rtl',
+                  }}
+                >
+                  {l.icon}
+                  <span>{l.label.split(' — ')[0]}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* size slider */}
