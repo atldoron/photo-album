@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lightbox, { SlideImage } from 'yet-another-react-lightbox'
 import Fullscreen from 'yet-another-react-lightbox/plugins/fullscreen'
-import Download from 'yet-another-react-lightbox/plugins/download'
 import type { MediaItem } from '@/types'
 import InfoPanel from './InfoPanel'
 
@@ -61,7 +60,7 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
         close={onClose}
         index={currentIndex}
         slides={slides}
-        plugins={[Fullscreen, Download]}
+        plugins={[Fullscreen]}
         on={{ view: ({ index: i }) => { setCurrentIndex(i); onNavigate(i) } }}
         carousel={{ finite: false, preload: 2 }}
         controller={{ closeOnBackdropClick: true }}
@@ -98,6 +97,14 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             </button>,
             <ShareItemButton key="share" />,
             <button
+              key="download"
+              onClick={() => current && window.open(current.downloadUrl, '_blank')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: '8px', color: '#fff' }}
+              title="הורד קובץ מקורי"
+            >
+              ⬇
+            </button>,
+            <button
               key="info"
               onClick={() => setShowInfo((v) => !v)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: '8px', color: '#fff' }}
@@ -105,7 +112,6 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             >
               ℹ️
             </button>,
-            'download',
             'fullscreen',
             'close',
           ],
