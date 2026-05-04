@@ -58,6 +58,15 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
     }
   }
 
+  function handleNavigateLightbox(index: number) {
+    const item = filteredSorted[index]
+    if (item) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('item', item.id)
+      router.replace(url.pathname + url.search, { scroll: false })
+    }
+  }
+
   function handleCloseLightbox() {
     setLightboxIndex(null)
     const url = new URL(window.location.href)
@@ -157,6 +166,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
           items={lightboxItems}
           index={lightboxIndex}
           onClose={handleCloseLightbox}
+          onNavigate={handleNavigateLightbox}
           isFav={isFav}
           onToggleFav={toggle}
         />

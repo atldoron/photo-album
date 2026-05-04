@@ -12,6 +12,7 @@ interface LightboxViewerProps {
   items: MediaItem[]
   index: number
   onClose: () => void
+  onNavigate: (index: number) => void
   isFav: (id: string) => boolean
   onToggleFav: (id: string) => void
 }
@@ -39,7 +40,7 @@ interface ExtendedSlide extends SlideImage {
   itemIndex: number
 }
 
-export default function LightboxViewer({ items, index, onClose, isFav, onToggleFav }: LightboxViewerProps) {
+export default function LightboxViewer({ items, index, onClose, onNavigate, isFav, onToggleFav }: LightboxViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(index)
   const [showInfo, setShowInfo] = useState(false)
 
@@ -61,7 +62,7 @@ export default function LightboxViewer({ items, index, onClose, isFav, onToggleF
         index={currentIndex}
         slides={slides}
         plugins={[Fullscreen, Download]}
-        on={{ view: ({ index: i }) => setCurrentIndex(i) }}
+        on={{ view: ({ index: i }) => { setCurrentIndex(i); onNavigate(i) } }}
         carousel={{ finite: false, preload: 2 }}
         controller={{ closeOnBackdropClick: true }}
         render={{
