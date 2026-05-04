@@ -106,23 +106,37 @@ export default function Toolbar({
         <button
           onClick={() => onSortChange(sort === 'date-desc' ? 'date-asc' : 'date-desc')}
           title={sort === 'date-desc' ? 'מהחדש לישן — לחץ לסדר עולה' : 'מהישן לחדש — לחץ לסדר יורד'}
-          className="text-sm px-2.5 py-1 rounded-md transition-opacity hover:opacity-70 shrink-0"
+          className="text-sm px-2.5 py-1 rounded-md transition-opacity hover:opacity-70 shrink-0 flex items-center gap-1.5"
           style={btnBase}
         >
-          {sort === 'date-desc' ? '📅 ▼' : '📅 ▲'}
+          מיון
+          {sort === 'date-desc' ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
+              <path d="M20 4v16m0 0-3-3m3 3 3-3"/>
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
+              <path d="M20 20V4m0 0-3 3m3-3 3 3"/>
+            </svg>
+          )}
         </button>
 
         {/* filter */}
         <button
           onClick={onFilterToggle}
-          className="text-sm px-2.5 py-1 rounded-md transition-colors shrink-0"
+          className="text-sm px-2.5 py-1 rounded-md transition-colors shrink-0 flex items-center gap-1.5"
           style={{
             background: filterOpen ? 'var(--muted)' : 'var(--surface)',
             border: '1px solid var(--border)',
             color: filterOpen ? 'var(--bg)' : 'var(--fg)',
           }}
         >
-          🔎 סינון
+          סינון
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 3H2l8 9.46V19l4 2V12.46L22 3Z"/>
+          </svg>
         </button>
 
         {/* divider */}
