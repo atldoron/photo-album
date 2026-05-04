@@ -90,7 +90,7 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             <button
               key="fav"
               onClick={() => current && onToggleFav(current.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, padding: '8px', color: '#fff' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, padding: '8px', color: '#fff' }}
               title={current && isFav(current.id) ? 'הסר ממועדפים' : 'הוסף למועדפים'}
             >
               {current && isFav(current.id) ? '⭐' : '☆'}

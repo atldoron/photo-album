@@ -87,7 +87,7 @@ export default function GalleryGrid({
         {/* star */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleFav(item.id) }}
-          className="absolute top-1 end-1 text-lg leading-none z-10 transition-opacity"
+          className="absolute top-1 end-1 text-xl leading-none z-10 transition-opacity"
           style={{
             opacity: photo.favStatus ? 1 : 0.45,
             textShadow: '0 1px 4px rgba(0,0,0,0.9)',
