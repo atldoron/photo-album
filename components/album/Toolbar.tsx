@@ -91,7 +91,7 @@ export default function Toolbar({
 
         {/* size slider */}
         <div className="flex items-center gap-1.5 shrink-0" style={{ width: '140px' }}>
-          <span className="text-xs opacity-40 select-none">🔍</span>
+          <span className="text-xs opacity-60 select-none whitespace-nowrap">גודל</span>
           <input
             type="range" min={10} max={100} value={size}
             onChange={(e) => onSizeChange(Number(e.target.value))}
