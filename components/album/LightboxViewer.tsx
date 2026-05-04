@@ -99,10 +99,13 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             <button
               key="download"
               onClick={() => current && window.open(current.downloadUrl, '_blank')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: '8px', color: '#fff' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: '#fff', display: 'flex', alignItems: 'center' }}
               title="הורד קובץ מקורי"
             >
-              ⬇
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3v13m0 0-4.5-4.5M12 16l4.5-4.5"/>
+                <path d="M3 19h18"/>
+              </svg>
             </button>,
             <button
               key="info"
