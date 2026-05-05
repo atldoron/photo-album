@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "thailand2026",
+    "name": "תאילנד",
+    "description": "טיול לתאילנד עם אתי ואופיר | שנת 2026",
+    "driveFolder": "https://drive.google.com/drive/folders/1UPlRzCkW7CynEyVe7NA7TFc1qixBmrIi?usp=sharing",
+    "defaultLayout": "rows",
+    "defaultSize": 50,
+    "defaultSort": "date-desc",
+    "createdAt": "2026-05-05T17:05:35.680Z",
+    "order": 0
+  }
+]
