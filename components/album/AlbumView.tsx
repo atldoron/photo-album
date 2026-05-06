@@ -31,6 +31,11 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
 
   const [layout, setLayout] = useState<Layout>(album.defaultLayout)
   const [size, setSize] = useState(album.defaultSize)
+
+  // On narrow screens default to 3 columns (size≈88) so pinch can go both ways
+  useEffect(() => {
+    if (window.innerWidth < 640) setSize(88)
+  }, [])
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
   const [filterOpen, setFilterOpen] = useState(false)
