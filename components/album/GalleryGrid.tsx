@@ -28,32 +28,12 @@ export default function GalleryGrid({
   items, layout, size, isFav, onToggleFav, onOpen, onSizeChange, hasMore, onLoadMore,
 }: GalleryGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const pinchRef = useRef<{ startDist: number; startSize: number } | null>(null)
+  const sizeRef = useRef(size)
+  sizeRef.current = size
 
-  function getPinchDist(touches: React.TouchList) {
-    const dx = touches[0].clientX - touches[1].clientX
-    const dy = touches[0].clientY - touches[1].clientY
-    return Math.sqrt(dx * dx + dy * dy)
-  }
-
-  function handleTouchStart(e: React.TouchEvent) {
-    if (e.touches.length === 2) {
-      pinchRef.current = { startDist: getPinchDist(e.touches), startSize: size }
-    }
-  }
-
-  function handleTouchMove(e: React.TouchEvent) {
-    if (e.touches.length !== 2 || !pinchRef.current) return
-    e.preventDefault()
-    const scale = getPinchDist(e.touches) / pinchRef.current.startDist
-    const next = Math.round(pinchRef.current.startSize * scale)
-    onSizeChange(Math.min(100, Math.max(10, next)))
-  }
-
-  function handleTouchEnd() {
-    pinchRef.current = null
-  }
-
+  // Infinite scroll
   useEffect(() => {
     const el = sentinelRef.current
     if (!el) return
@@ -65,6 +45,43 @@ export default function GalleryGrid({
     return () => observer.disconnect()
   }, [hasMore, onLoadMore])
 
+  // Pinch-to-zoom — must use native listeners with passive:false so preventDefault works
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    function dist(touches: TouchList) {
+      const dx = touches[0].clientX - touches[1].clientX
+      const dy = touches[0].clientY - touches[1].clientY
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+
+    function onStart(e: TouchEvent) {
+      if (e.touches.length === 2) {
+        pinchRef.current = { startDist: dist(e.touches), startSize: sizeRef.current }
+      }
+    }
+
+    function onMove(e: TouchEvent) {
+      if (e.touches.length !== 2 || !pinchRef.current) return
+      e.preventDefault() // stops browser zoom + scroll
+      const scale = dist(e.touches) / pinchRef.current.startDist
+      const next = Math.round(pinchRef.current.startSize * scale)
+      onSizeChange(Math.min(100, Math.max(10, next)))
+    }
+
+    function onEnd() { pinchRef.current = null }
+
+    el.addEventListener('touchstart', onStart, { passive: true })
+    el.addEventListener('touchmove', onMove, { passive: false }) // passive:false = can preventDefault
+    el.addEventListener('touchend', onEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+    }
+  }, [onSizeChange])
+
   const photos: GalleryPhoto[] = items.map((item) => ({
     src: item.thumbnailUrl,
     width: item.width || 1,
@@ -75,12 +92,11 @@ export default function GalleryGrid({
     favStatus: isFav(item.id),
   }))
 
-  // Desktop columns from slider; cap on mobile so images aren't tiny
+  // Columns from slider/pinch; cap only by minimum image width (70px) so mobile pinch works freely
   const columns = Math.max(2, Math.round(10 - size / 12.5))
   const responsiveColumns = (containerWidth: number) => {
-    if (containerWidth < 480) return Math.min(columns, 2)
-    if (containerWidth < 720) return Math.min(columns, 3)
-    return columns
+    const maxByWidth = Math.max(2, Math.floor(containerWidth / 70))
+    return Math.min(columns, maxByWidth)
   }
   const targetRowHeight = (containerWidth: number) =>
     Math.round(containerWidth / (responsiveColumns(containerWidth) * 1.5))
@@ -141,10 +157,8 @@ export default function GalleryGrid({
 
   return (
     <div
+      ref={containerRef}
       className="p-2 flex-1"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
       style={{ touchAction: 'pan-y' }}
     >
       {(layout === 'rows' || layout === 'columns') && (
