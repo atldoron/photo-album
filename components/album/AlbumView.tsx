@@ -33,30 +33,35 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const [size, setSize] = useState(album.defaultSize)
 
   // Mobile: 3 cols portrait (size=88), 5 cols landscape (size=62) — updates on rotation
-  // Also auto-enters fullscreen on load and on every portrait↔landscape transition
   useEffect(() => {
-    let lastOrientation: 'portrait' | 'landscape' | null = null
-
     function applyMobileSize() {
       const w = window.innerWidth
       const h = window.innerHeight
       if (Math.max(w, h) < 1024) {          // treat as mobile/tablet
         setSize(h > w ? 88 : 62)            // portrait=3cols, landscape=5cols
       }
-
-      // Auto-fullscreen: on initial load and on every orientation change
-      const orientation: 'portrait' | 'landscape' = h >= w ? 'portrait' : 'landscape'
-      if (lastOrientation === null || lastOrientation !== orientation) {
-        lastOrientation = orientation
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {})
-        }
-      }
     }
-
     applyMobileSize()
     window.addEventListener('resize', applyMobileSize)
     return () => window.removeEventListener('resize', applyMobileSize)
+  }, [])
+
+  // Auto-fullscreen: browsers block requestFullscreen() unless called from a user gesture.
+  // We listen for the first touch/click and enter fullscreen then — satisfying the browser requirement.
+  // After that, orientation changes keep the page in fullscreen naturally.
+  useEffect(() => {
+    function tryFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {})
+      }
+    }
+    // { once: true } — fires once per gesture type, then auto-removes
+    document.addEventListener('touchstart', tryFullscreen, { once: true, passive: true })
+    document.addEventListener('click',      tryFullscreen, { once: true })
+    return () => {
+      document.removeEventListener('touchstart', tryFullscreen)
+      document.removeEventListener('click',      tryFullscreen)
+    }
   }, [])
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
