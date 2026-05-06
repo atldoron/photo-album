@@ -32,9 +32,18 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const [layout, setLayout] = useState<Layout>(album.defaultLayout)
   const [size, setSize] = useState(album.defaultSize)
 
-  // On narrow screens default to 3 columns (size≈88) so pinch can go both ways
+  // Mobile: 3 cols portrait (size=88), 5 cols landscape (size=62) — updates on rotation
   useEffect(() => {
-    if (window.innerWidth < 640) setSize(88)
+    function applyMobileSize() {
+      const w = window.innerWidth
+      const h = window.innerHeight
+      if (Math.max(w, h) < 1024) {          // treat as mobile/tablet
+        setSize(h > w ? 88 : 62)            // portrait=3cols, landscape=5cols
+      }
+    }
+    applyMobileSize()
+    window.addEventListener('resize', applyMobileSize)
+    return () => window.removeEventListener('resize', applyMobileSize)
   }, [])
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
