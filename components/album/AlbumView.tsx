@@ -156,6 +156,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
           isFav={isFav}
           onToggleFav={toggle}
           onOpen={handleOpenLightbox}
+          onSizeChange={setSize}
           hasMore={hasMore}
           onLoadMore={handleLoadMore}
         />

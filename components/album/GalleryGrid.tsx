@@ -19,14 +19,40 @@ interface GalleryGridProps {
   isFav: (id: string) => boolean
   onToggleFav: (id: string) => void
   onOpen: (index: number) => void
+  onSizeChange: (s: number) => void
   hasMore: boolean
   onLoadMore: () => void
 }
 
 export default function GalleryGrid({
-  items, layout, size, isFav, onToggleFav, onOpen, hasMore, onLoadMore,
+  items, layout, size, isFav, onToggleFav, onOpen, onSizeChange, hasMore, onLoadMore,
 }: GalleryGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const pinchRef = useRef<{ startDist: number; startSize: number } | null>(null)
+
+  function getPinchDist(touches: React.TouchList) {
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      pinchRef.current = { startDist: getPinchDist(e.touches), startSize: size }
+    }
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (e.touches.length !== 2 || !pinchRef.current) return
+    e.preventDefault()
+    const scale = getPinchDist(e.touches) / pinchRef.current.startDist
+    const next = Math.round(pinchRef.current.startSize * scale)
+    onSizeChange(Math.min(100, Math.max(10, next)))
+  }
+
+  function handleTouchEnd() {
+    pinchRef.current = null
+  }
 
   useEffect(() => {
     const el = sentinelRef.current
@@ -114,7 +140,13 @@ export default function GalleryGrid({
   }
 
   return (
-    <div className="p-2 flex-1">
+    <div
+      className="p-2 flex-1"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ touchAction: 'pan-y' }}
+    >
       {(layout === 'rows' || layout === 'columns') && (
         <RowsPhotoAlbum
           {...sharedProps}
