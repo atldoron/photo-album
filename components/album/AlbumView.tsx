@@ -33,14 +33,27 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const [size, setSize] = useState(album.defaultSize)
 
   // Mobile: 3 cols portrait (size=88), 5 cols landscape (size=62) — updates on rotation
+  // Also auto-enters fullscreen on load and on every portrait↔landscape transition
   useEffect(() => {
+    let lastOrientation: 'portrait' | 'landscape' | null = null
+
     function applyMobileSize() {
       const w = window.innerWidth
       const h = window.innerHeight
       if (Math.max(w, h) < 1024) {          // treat as mobile/tablet
         setSize(h > w ? 88 : 62)            // portrait=3cols, landscape=5cols
       }
+
+      // Auto-fullscreen: on initial load and on every orientation change
+      const orientation: 'portrait' | 'landscape' = h >= w ? 'portrait' : 'landscape'
+      if (lastOrientation === null || lastOrientation !== orientation) {
+        lastOrientation = orientation
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {})
+        }
+      }
     }
+
     applyMobileSize()
     window.addEventListener('resize', applyMobileSize)
     return () => window.removeEventListener('resize', applyMobileSize)
