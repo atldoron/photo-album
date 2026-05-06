@@ -46,23 +46,6 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
     return () => window.removeEventListener('resize', applyMobileSize)
   }, [])
 
-  // Auto-fullscreen: browsers block requestFullscreen() unless called from a user gesture.
-  // We listen for the first touch/click and enter fullscreen then — satisfying the browser requirement.
-  // After that, orientation changes keep the page in fullscreen naturally.
-  useEffect(() => {
-    function tryFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {})
-      }
-    }
-    // { once: true } — fires once per gesture type, then auto-removes
-    document.addEventListener('touchstart', tryFullscreen, { once: true, passive: true })
-    document.addEventListener('click',      tryFullscreen, { once: true })
-    return () => {
-      document.removeEventListener('touchstart', tryFullscreen)
-      document.removeEventListener('click',      tryFullscreen)
-    }
-  }, [])
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
   const [filterOpen, setFilterOpen] = useState(false)
