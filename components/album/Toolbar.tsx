@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import type { Layout, SortOption } from '@/types'
-import { useDarkMode } from '@/hooks/useDarkMode'
 
 interface ToolbarProps {
   albumName: string
@@ -64,7 +63,6 @@ export default function Toolbar({
   layout, size, sort, filterOpen,
   onLayoutChange, onSizeChange, onSortChange, onFilterToggle,
 }: ToolbarProps) {
-  const { dark, toggle } = useDarkMode()
   const [layoutOpen, setLayoutOpen] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
 
@@ -212,11 +210,6 @@ export default function Toolbar({
           title="מסך מלא"
         >
           ⛶
-        </button>
-
-        {/* dark mode */}
-        <button onClick={toggle} style={btn} title={dark ? 'מצב בהיר' : 'מצב כהה'}>
-          {dark ? '☀️' : '🌙'}
         </button>
 
       </div>

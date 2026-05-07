@@ -32,15 +32,22 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const [layout, setLayout] = useState<Layout>(album.defaultLayout)
   const [size, setSize] = useState(album.defaultSize)
 
-  // Mobile: 3 cols portrait (size=88), 5 cols landscape (size=62) — updates on rotation
+  // Mobile: 3 cols portrait (size=88), 5 cols landscape (size=62) — only on orientation change.
+  // We track the last orientation so that browser-bar show/hide (which also fires resize)
+  // does NOT reset the user's pinch-to-zoom size.
   useEffect(() => {
+    let lastIsPortrait: boolean | null = null
+
     function applyMobileSize() {
       const w = window.innerWidth
       const h = window.innerHeight
-      if (Math.max(w, h) < 1024) {          // treat as mobile/tablet
-        setSize(h > w ? 88 : 62)            // portrait=3cols, landscape=5cols
-      }
+      if (Math.max(w, h) >= 1024) return      // desktop — ignore
+      const isPortrait = h > w
+      if (lastIsPortrait === isPortrait) return // same orientation — don't reset
+      lastIsPortrait = isPortrait
+      setSize(isPortrait ? 88 : 62)            // portrait=3cols, landscape=5cols
     }
+
     applyMobileSize()
     window.addEventListener('resize', applyMobileSize)
     return () => window.removeEventListener('resize', applyMobileSize)
