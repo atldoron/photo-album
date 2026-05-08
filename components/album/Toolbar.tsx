@@ -66,13 +66,15 @@ export default function Toolbar({
   onLayoutChange, onColsChange, onSortChange, onFilterToggle,
 }: ToolbarProps) {
   const [layoutOpen, setLayoutOpen] = useState(false)
+  const [colsOpen, setColsOpen] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
+  const colsRef = useRef<HTMLDivElement>(null)
 
+  // Close both dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (layoutRef.current && !layoutRef.current.contains(e.target as Node)) {
-        setLayoutOpen(false)
-      }
+      if (layoutRef.current && !layoutRef.current.contains(e.target as Node)) setLayoutOpen(false)
+      if (colsRef.current && !colsRef.current.contains(e.target as Node)) setColsOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -150,26 +152,39 @@ export default function Toolbar({
         </div>
 
         {/* cols dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)' }} />
-          <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.6, whiteSpace: 'nowrap' }}>בשורה</span>
-          <select
-            value={cols}
-            onChange={(e) => onColsChange(Number(e.target.value))}
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--fg)',
-              borderRadius: '6px',
-              padding: '4px 6px',
-              fontSize: '13px',
-              cursor: 'pointer',
-            }}
-          >
-            {Array.from({ length: colsMax - colsMin + 1 }, (_, i) => colsMin + i).map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
+        <div style={{ position: 'relative', flexShrink: 0 }} ref={colsRef}>
+          <button onClick={() => setColsOpen((v) => !v)} style={btn} title="תמונות בשורה">
+            <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.7 }}>בשורה</span>
+            <span style={{ fontWeight: 600, minWidth: '14px', textAlign: 'center' }}>{cols}</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          {colsOpen && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: '8px', overflow: 'hidden', zIndex: 50,
+              display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+            }}>
+              {Array.from({ length: colsMax - colsMin + 1 }, (_, i) => colsMin + i).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => { onColsChange(n); setColsOpen(false) }}
+                  style={{
+                    padding: '8px 14px',
+                    background: cols === n ? 'var(--muted)' : 'transparent',
+                    color: cols === n ? 'var(--bg)' : 'var(--fg)',
+                    border: 'none', cursor: 'pointer',
+                    fontSize: '14px', fontWeight: cols === n ? 700 : 400,
+                    textAlign: 'center',
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* divider — desktop only */}

@@ -40,28 +40,29 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
 
   // On first load and on every portrait↔landscape transition:
   // restore the user's last choice from localStorage, or apply the default.
-  // We compare orientation before/after so that browser-bar hide/show
-  // (which also fires "resize" on mobile) does NOT reset the column count.
+  // Uses matchMedia so browser-bar hide/show (which fires "resize" but not
+  // orientation change) never resets the column count.
   useEffect(() => {
-    let lastIsPortrait: boolean | null = null
+    const mq = window.matchMedia('(orientation: portrait)')
 
-    function handleResize() {
-      const portrait = window.innerHeight >= window.innerWidth
-      if (lastIsPortrait === portrait) return   // same orientation — do nothing
-      lastIsPortrait = portrait
+    function apply(portrait: boolean) {
       setIsPortrait(portrait)
+      const max = portrait ? 5 : 10
       const stored = localStorage.getItem(portrait ? KEY_P : KEY_L)
-      setCols(stored ? Number(stored) : portrait ? 3 : 5)
+      const n = stored ? Math.min(max, Math.max(2, Number(stored))) : portrait ? 3 : 5
+      setCols(n)
     }
 
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    function handleChange(e: MediaQueryListEvent) { apply(e.matches) }
+
+    apply(mq.matches) // set correct values immediately on mount
+    mq.addEventListener('change', handleChange)
+    return () => mq.removeEventListener('change', handleChange)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update cols + persist to localStorage
   function handleColsChange(n: number) {
-    const portrait = window.innerHeight >= window.innerWidth
+    const portrait = window.matchMedia('(orientation: portrait)').matches
     setCols(n)
     localStorage.setItem(portrait ? KEY_P : KEY_L, String(n))
   }
