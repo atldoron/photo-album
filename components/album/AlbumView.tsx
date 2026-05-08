@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useLayoutEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Toolbar from './Toolbar'
 import FilterPanel from './FilterPanel'
@@ -40,9 +40,12 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
 
   // On first load and on every portrait↔landscape transition:
   // restore the user's last choice from localStorage, or apply the default.
+  // useLayoutEffect (not useEffect) so the correct cols is committed BEFORE
+  // the browser first paints — eliminates the SSR flash from cols=3→5.
+  // Does not run on the server (Next.js client component).
   // Uses matchMedia so browser-bar hide/show (which fires "resize" but not
   // orientation change) never resets the column count.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const mq = window.matchMedia('(orientation: portrait)')
 
     function apply(portrait: boolean) {
