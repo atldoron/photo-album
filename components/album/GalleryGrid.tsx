@@ -15,23 +15,25 @@ interface GalleryPhoto extends Photo {
 interface GalleryGridProps {
   items: MediaItem[]
   layout: Layout
-  size: number
+  cols: number
+  colsMin: number
+  colsMax: number
   isFav: (id: string) => boolean
   onToggleFav: (id: string) => void
   onOpen: (index: number) => void
-  onSizeChange: (s: number) => void
+  onColsChange: (n: number) => void
   hasMore: boolean
   onLoadMore: () => void
 }
 
 export default function GalleryGrid({
-  items, layout, size, isFav, onToggleFav, onOpen, onSizeChange, hasMore, onLoadMore,
+  items, layout, cols, colsMin, colsMax, isFav, onToggleFav, onOpen, onColsChange, hasMore, onLoadMore,
 }: GalleryGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const pinchRef = useRef<{ startDist: number; startSize: number } | null>(null)
-  const sizeRef = useRef(size)
-  sizeRef.current = size
+  const pinchRef = useRef<{ startDist: number; startCols: number } | null>(null)
+  const colsRef = useRef(cols)
+  colsRef.current = cols
 
   // Infinite scroll
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function GalleryGrid({
 
     function onStart(e: TouchEvent) {
       if (e.touches.length === 2) {
-        pinchRef.current = { startDist: dist(e.touches), startSize: sizeRef.current }
+        pinchRef.current = { startDist: dist(e.touches), startCols: colsRef.current }
       }
     }
 
@@ -66,8 +68,9 @@ export default function GalleryGrid({
       if (e.touches.length !== 2 || !pinchRef.current) return
       e.preventDefault() // stops browser zoom + scroll
       const scale = dist(e.touches) / pinchRef.current.startDist
-      const next = Math.round(pinchRef.current.startSize * scale)
-      onSizeChange(Math.min(100, Math.max(10, next)))
+      // pinch-out (scale>1) = zoom in = fewer cols; pinch-in (scale<1) = more cols
+      const next = Math.round(pinchRef.current.startCols / scale)
+      onColsChange(Math.min(colsMax, Math.max(colsMin, next)))
     }
 
     function onEnd() { pinchRef.current = null }
@@ -80,7 +83,7 @@ export default function GalleryGrid({
       el.removeEventListener('touchmove', onMove)
       el.removeEventListener('touchend', onEnd)
     }
-  }, [onSizeChange])
+  }, [onColsChange, colsMin, colsMax])
 
   const photos: GalleryPhoto[] = items.map((item) => ({
     src: item.thumbnailUrl,
@@ -92,11 +95,10 @@ export default function GalleryGrid({
     favStatus: isFav(item.id),
   }))
 
-  // Columns from slider/pinch; cap only by minimum image width (70px) so mobile pinch works freely
-  const columns = Math.max(2, Math.round(10 - size / 12.5))
+  // Use cols directly; only cap by minimum image width (40px) so small screens stay usable
   const responsiveColumns = (containerWidth: number) => {
-    const maxByWidth = Math.max(2, Math.floor(containerWidth / 70))
-    return Math.min(columns, maxByWidth)
+    const maxByWidth = Math.max(1, Math.floor(containerWidth / 40))
+    return Math.min(cols, maxByWidth)
   }
   const targetRowHeight = (containerWidth: number) =>
     Math.round(containerWidth / (responsiveColumns(containerWidth) * 1.5))
@@ -180,7 +182,7 @@ export default function GalleryGrid({
         {hasMore && (
           <div
             className="grid gap-0.5"
-            style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${Math.round(80 + size)}px, 1fr))` }}
+            style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
           >
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="animate-pulse rounded"

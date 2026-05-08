@@ -9,11 +9,13 @@ interface ToolbarProps {
   imageCount: number
   videoCount: number
   layout: Layout
-  size: number
+  cols: number
+  colsMin: number
+  colsMax: number
   sort: SortOption
   filterOpen: boolean
   onLayoutChange: (l: Layout) => void
-  onSizeChange: (s: number) => void
+  onColsChange: (n: number) => void
   onSortChange: (s: SortOption) => void
   onFilterToggle: () => void
 }
@@ -60,8 +62,8 @@ const divider = (
 
 export default function Toolbar({
   albumName, albumDescription, imageCount, videoCount,
-  layout, size, sort, filterOpen,
-  onLayoutChange, onSizeChange, onSortChange, onFilterToggle,
+  layout, cols, colsMin, colsMax, sort, filterOpen,
+  onLayoutChange, onColsChange, onSortChange, onFilterToggle,
 }: ToolbarProps) {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
@@ -147,15 +149,27 @@ export default function Toolbar({
           )}
         </div>
 
-        {/* size slider — desktop only */}
-        <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        {/* cols dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)' }} />
-          <span style={{ fontSize: '12px', opacity: 0.6, whiteSpace: 'nowrap' }}>גודל</span>
-          <input
-            type="range" min={10} max={100} value={size}
-            onChange={(e) => onSizeChange(Number(e.target.value))}
-            style={{ width: '110px', accentColor: 'var(--fg)', display: 'block' }}
-          />
+          <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.6, whiteSpace: 'nowrap' }}>בשורה</span>
+          <select
+            value={cols}
+            onChange={(e) => onColsChange(Number(e.target.value))}
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--fg)',
+              borderRadius: '6px',
+              padding: '4px 6px',
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            {Array.from({ length: colsMax - colsMin + 1 }, (_, i) => colsMin + i).map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
         </div>
 
         {/* divider — desktop only */}

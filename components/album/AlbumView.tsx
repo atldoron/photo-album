@@ -30,28 +30,44 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const router = useRouter()
 
   const [layout, setLayout] = useState<Layout>(album.defaultLayout)
-  const [size, setSize] = useState(album.defaultSize)
 
-  // Mobile: 3 cols portrait (size=88), 5 cols landscape (size=62) — only on orientation change.
-  // We track the last orientation so that browser-bar show/hide (which also fires resize)
-  // does NOT reset the user's pinch-to-zoom size.
+  // localStorage keys — per album, per orientation
+  const KEY_P = `cols_portrait_${album.id}`
+  const KEY_L = `cols_landscape_${album.id}`
+
+  const [cols, setCols] = useState<number>(3)
+  const [isPortrait, setIsPortrait] = useState<boolean>(true)
+
+  // On first load and on every portrait↔landscape transition:
+  // restore the user's last choice from localStorage, or apply the default.
+  // We compare orientation before/after so that browser-bar hide/show
+  // (which also fires "resize" on mobile) does NOT reset the column count.
   useEffect(() => {
     let lastIsPortrait: boolean | null = null
 
-    function applyMobileSize() {
-      const w = window.innerWidth
-      const h = window.innerHeight
-      if (Math.max(w, h) >= 1024) return      // desktop — ignore
-      const isPortrait = h > w
-      if (lastIsPortrait === isPortrait) return // same orientation — don't reset
-      lastIsPortrait = isPortrait
-      setSize(isPortrait ? 88 : 62)            // portrait=3cols, landscape=5cols
+    function handleResize() {
+      const portrait = window.innerHeight >= window.innerWidth
+      if (lastIsPortrait === portrait) return   // same orientation — do nothing
+      lastIsPortrait = portrait
+      setIsPortrait(portrait)
+      const stored = localStorage.getItem(portrait ? KEY_P : KEY_L)
+      setCols(stored ? Number(stored) : portrait ? 3 : 5)
     }
 
-    applyMobileSize()
-    window.addEventListener('resize', applyMobileSize)
-    return () => window.removeEventListener('resize', applyMobileSize)
-  }, [])
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update cols + persist to localStorage
+  function handleColsChange(n: number) {
+    const portrait = window.innerHeight >= window.innerWidth
+    setCols(n)
+    localStorage.setItem(portrait ? KEY_P : KEY_L, String(n))
+  }
+
+  const colsMin = 2
+  const colsMax = isPortrait ? 5 : 10
 
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
@@ -136,10 +152,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const imageCount = media.filter((m) => m.type === 'image').length
   const videoCount = media.filter((m) => m.type === 'video').length
 
-  // Lightbox items — filtered by favorites if filter is active
-  const lightboxItems = filter.favoritesOnly
-    ? filteredSorted
-    : filteredSorted
+  const lightboxItems = filteredSorted
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -149,11 +162,13 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
         imageCount={imageCount}
         videoCount={videoCount}
         layout={layout}
-        size={size}
+        cols={cols}
+        colsMin={colsMin}
+        colsMax={colsMax}
         sort={sort}
         filterOpen={filterOpen}
         onLayoutChange={setLayout}
-        onSizeChange={setSize}
+        onColsChange={handleColsChange}
         onSortChange={setSort}
         onFilterToggle={() => setFilterOpen((v) => !v)}
       />
@@ -174,11 +189,13 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
         <GalleryGrid
           items={visibleItems}
           layout={layout}
-          size={size}
+          cols={cols}
+          colsMin={colsMin}
+          colsMax={colsMax}
           isFav={isFav}
           onToggleFav={toggle}
           onOpen={handleOpenLightbox}
-          onSizeChange={setSize}
+          onColsChange={handleColsChange}
           hasMore={hasMore}
           onLoadMore={handleLoadMore}
         />
