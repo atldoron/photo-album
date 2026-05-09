@@ -151,6 +151,7 @@ export default function Toolbar({
   const [mobileColsOpen, setMobileColsOpen] = useState(false)
   const [groupOpen, setGroupOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [isMobileToolbar, setIsMobileToolbar] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
   const colsRef = useRef<HTMLDivElement>(null)
   const mobileColsRef = useRef<HTMLDivElement>(null)
@@ -165,6 +166,19 @@ export default function Toolbar({
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  useEffect(() => {
+    function updateMobileToolbar() {
+      setIsMobileToolbar(window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 640)
+    }
+    updateMobileToolbar()
+    window.addEventListener('resize', updateMobileToolbar)
+    window.addEventListener('orientationchange', updateMobileToolbar)
+    return () => {
+      window.removeEventListener('resize', updateMobileToolbar)
+      window.removeEventListener('orientationchange', updateMobileToolbar)
+    }
   }, [])
 
   useEffect(() => {
@@ -241,9 +255,9 @@ export default function Toolbar({
           )}
         </div>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        <div className="hidden sm:block" style={{ position: 'relative', flexShrink: 0 }} ref={layoutRef}>
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', position: 'relative', flexShrink: 0 }} ref={layoutRef}>
           <button onClick={() => setLayoutOpen((v) => !v)} style={btn} title="בחר תצוגה">
             <span style={{ fontSize: '12px', opacity: 0.7 }}>תצוגה</span>
             {activeLayout.icon}
@@ -275,7 +289,7 @@ export default function Toolbar({
           )}
         </div>
 
-        <div className="hidden sm:block" style={{ position: 'relative', flexShrink: 0 }} ref={colsRef}>
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', position: 'relative', flexShrink: 0 }} ref={colsRef}>
           <button onClick={() => setColsOpen((v) => !v)} style={btn} title="תמונות בשורה">
             <span style={{ fontSize: '12px', opacity: 0.7 }}>בשורה</span>
             <span style={{ fontWeight: 600, minWidth: '14px', textAlign: 'center' }}>{cols}</span>
@@ -284,9 +298,9 @@ export default function Toolbar({
           {colsOpen && renderColsDropdown(() => setColsOpen(false))}
         </div>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        <div className="hidden sm:block" style={{ position: 'relative', flexShrink: 0 }} ref={groupRef}>
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', position: 'relative', flexShrink: 0 }} ref={groupRef}>
           <button onClick={() => setGroupOpen((v) => !v)} style={btn} title="קיבוץ תצוגה">
             <span style={{ fontSize: '12px', opacity: 0.7 }}>קיבוץ</span>
             {activeGroupMode.icon}
@@ -317,23 +331,22 @@ export default function Toolbar({
           )}
         </div>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
         <button
-          className="hidden sm:flex"
           onClick={toggleSort}
           title={sort === 'date-desc' ? 'מהחדש לישן - לחץ לסדר עולה' : 'מהישן לחדש - לחץ לסדר יורד'}
-          style={btn}
+          style={{ ...btn, display: isMobileToolbar ? 'none' : 'flex' }}
         >
           <span>מיון</span>
           <SortIcon sort={sort} />
         </button>
 
         <button
-          className="hidden sm:flex"
           onClick={onFilterToggle}
           style={{
             ...btn,
+            display: isMobileToolbar ? 'none' : 'flex',
             background: filterOpen ? 'var(--muted)' : 'var(--surface)',
             color: filterOpen ? 'var(--bg)' : 'var(--fg)',
           }}
@@ -342,9 +355,9 @@ export default function Toolbar({
           {filterIcon}
         </button>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
+        <div style={{ display: isMobileToolbar ? 'none' : 'block', width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        <div className="sm:hidden" style={{ position: 'relative', flexShrink: 0 }} ref={mobileColsRef}>
+        <div style={{ display: isMobileToolbar ? 'block' : 'none', position: 'relative', flexShrink: 0 }} ref={mobileColsRef}>
           <button onClick={() => setMobileColsOpen((v) => !v)} style={mobileBtn} title="תמונות בשורה">
             <span>בשורה</span>
             <span style={{ fontWeight: 700, minWidth: '12px', textAlign: 'center' }}>{cols}</span>
@@ -354,19 +367,17 @@ export default function Toolbar({
         </div>
 
         <button
-          className="sm:hidden"
           onClick={toggleSort}
           title={sort === 'date-desc' ? 'מהחדש לישן' : 'מהישן לחדש'}
-          style={mobileBtn}
+          style={{ ...mobileBtn, display: isMobileToolbar ? 'flex' : 'none' }}
         >
           <span>מיון</span>
           <SortIcon sort={sort} />
         </button>
 
         <button
-          className="sm:hidden"
           onClick={() => setMoreOpen(true)}
-          style={mobileBtn}
+          style={{ ...mobileBtn, display: isMobileToolbar ? 'flex' : 'none' }}
           title="עוד"
         >
           <span>עוד</span>
@@ -374,9 +385,8 @@ export default function Toolbar({
         </button>
 
         <button
-          className="sm:hidden"
           onClick={toggleFullscreen}
-          style={{ ...mobileBtn, width: '32px', justifyContent: 'center', padding: '5px 0' }}
+          style={{ ...mobileBtn, display: isMobileToolbar ? 'flex' : 'none', width: '32px', justifyContent: 'center', padding: '5px 0' }}
           title="מסך מלא"
           aria-label="מסך מלא"
         >
@@ -384,17 +394,16 @@ export default function Toolbar({
         </button>
 
         <button
-          className="hidden sm:flex"
           onClick={toggleFullscreen}
-          style={btn}
+          style={{ ...btn, display: isMobileToolbar ? 'none' : 'flex' }}
           title="מסך מלא"
         >
           {fullscreenIcon}
         </button>
       </div>
 
-      {moreOpen && (
-        <div className="sm:hidden fixed inset-0" style={{ zIndex: 70 }}>
+      {isMobileToolbar && moreOpen && (
+        <div className="fixed inset-0" style={{ zIndex: 70 }}>
           <button
             aria-label="סגור"
             onClick={() => setMoreOpen(false)}
