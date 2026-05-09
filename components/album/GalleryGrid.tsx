@@ -98,14 +98,29 @@ export default function GalleryGrid({
     const maxByWidth = Math.max(1, Math.floor(containerWidth / 40))
     return Math.min(cols, maxByWidth)
   }
+
+  const rows = items.reduce<MediaItem[][]>((acc, item, index) => {
+    if (index % cols === 0) acc.push([])
+    acc[acc.length - 1].push(item)
+    return acc
+  }, [])
+
   function renderGridItem(item: MediaItem, index: number) {
     const favStatus = isFav(item.id)
+    const width = item.width || 1
+    const height = item.height || 1
+    const ratio = Math.max(0.2, width / height)
 
     return (
       <div
         key={item.id}
         className="relative group overflow-hidden"
-        style={{ cursor: 'pointer', aspectRatio: '1 / 1' }}
+        style={{
+          cursor: 'pointer',
+          flex: `${ratio} 1 0`,
+          minWidth: 0,
+          aspectRatio: `${width} / ${height}`,
+        }}
         onClick={() => onOpen(index)}
       >
         <img
@@ -209,15 +224,15 @@ export default function GalleryGrid({
           role="group"
           aria-label="Photo album"
         >
-          <div
-            className="grid"
-            style={{
-              gap: 2,
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-            }}
-          >
-            {items.map(renderGridItem)}
-          </div>
+          {rows.map((row, rowIndex) => (
+            <div
+              key={row[0]?.id ?? rowIndex}
+              className="flex"
+              style={{ gap: 2, marginBottom: rowIndex === rows.length - 1 ? 0 : 2 }}
+            >
+              {row.map((item, itemIndex) => renderGridItem(item, rowIndex * cols + itemIndex))}
+            </div>
+          ))}
         </div>
       )}
       {layout === 'masonry' && (
