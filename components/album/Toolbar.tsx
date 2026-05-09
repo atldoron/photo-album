@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { GroupMode, Layout, SortOption } from '@/types'
 
 interface ToolbarProps {
@@ -22,55 +23,69 @@ interface ToolbarProps {
   onFilterToggle: () => void
 }
 
-const LAYOUTS: { value: Layout; label: string; icon: React.ReactNode }[] = [
-  {
-    value: 'rows',
-    label: 'שורות — תמונות בגודל אחיד בשורות',
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <rect x="3" y="3" width="18" height="5" rx="1"/><rect x="3" y="10" width="18" height="5" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/>
-      </svg>
-    ),
-  },
-  {
-    value: 'masonry',
-    label: 'פסיפס — תמונות בגבהים שונים',
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <rect x="3" y="3" width="8" height="11" rx="1"/><rect x="13" y="3" width="8" height="7" rx="1"/>
-        <rect x="3" y="16" width="8" height="5" rx="1"/><rect x="13" y="12" width="8" height="9" rx="1"/>
-      </svg>
-    ),
-  },
+const rowsIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <rect x="3" y="3" width="18" height="5" rx="1"/><rect x="3" y="10" width="18" height="5" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/>
+  </svg>
+)
+
+const masonryIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <rect x="3" y="3" width="8" height="11" rx="1"/><rect x="13" y="3" width="8" height="7" rx="1"/>
+    <rect x="3" y="16" width="8" height="5" rx="1"/><rect x="13" y="12" width="8" height="9" rx="1"/>
+  </svg>
+)
+
+const continuousIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="4" y1="6" x2="20" y2="6" />
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="18" x2="20" y2="18" />
+  </svg>
+)
+
+const calendarIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="17" rx="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+)
+
+const filterIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 3H2l8 9.46V19l4 2V12.46L22 3Z"/>
+  </svg>
+)
+
+const moreIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="5" cy="12" r="1"/>
+    <circle cx="12" cy="12" r="1"/>
+    <circle cx="19" cy="12" r="1"/>
+  </svg>
+)
+
+const chevronIcon = (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m6 9 6 6 6-6"/>
+  </svg>
+)
+
+const fullscreenIcon = '⛶'
+
+const LAYOUTS: { value: Layout; label: string; description: string; icon: ReactNode }[] = [
+  { value: 'rows', label: 'שורות', description: 'תמונות בגודל אחיד בשורות', icon: rowsIcon },
+  { value: 'masonry', label: 'פסיפס', description: 'תמונות בגבהים שונים', icon: masonryIcon },
 ]
 
-const GROUP_MODES: { value: GroupMode; label: string; icon: React.ReactNode }[] = [
-  {
-    value: 'continuous',
-    label: 'רציף',
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="4" y1="6" x2="20" y2="6" />
-        <line x1="4" y1="12" x2="20" y2="12" />
-        <line x1="4" y1="18" x2="20" y2="18" />
-      </svg>
-    ),
-  },
-  {
-    value: 'by-day',
-    label: 'לפי ימים',
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="17" rx="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    ),
-  },
+const GROUP_MODES: { value: GroupMode; label: string; icon: ReactNode }[] = [
+  { value: 'continuous', label: 'רציף', icon: continuousIcon },
+  { value: 'by-day', label: 'לפי ימים', icon: calendarIcon },
 ]
 
-const btn: React.CSSProperties = {
+const btn: CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',
   color: 'var(--fg)',
@@ -84,6 +99,48 @@ const btn: React.CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
+const mobileBtn: CSSProperties = {
+  ...btn,
+  padding: '5px 7px',
+  fontSize: '12px',
+  gap: '4px',
+  minHeight: '31px',
+}
+
+const sheetSection: CSSProperties = {
+  padding: '12px',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  background: 'rgba(255,255,255,0.02)',
+}
+
+const optionBtn: CSSProperties = {
+  border: '1px solid var(--border)',
+  borderRadius: '6px',
+  padding: '8px 10px',
+  fontSize: '13px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '6px',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+}
+
+function SortIcon({ sort }: { sort: SortOption }) {
+  return sort === 'date-desc' ? (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
+      <path d="M20 4v16m0 0-3-3m3 3 3-3"/>
+    </svg>
+  ) : (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
+      <path d="M20 20V4m0 0-3 3m3-3 3 3"/>
+    </svg>
+  )
+}
+
 export default function Toolbar({
   albumName, albumDescription, imageCount, videoCount,
   layout, cols, colsMin, colsMax, groupMode, sort, filterOpen,
@@ -91,20 +148,31 @@ export default function Toolbar({
 }: ToolbarProps) {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [colsOpen, setColsOpen] = useState(false)
+  const [mobileColsOpen, setMobileColsOpen] = useState(false)
   const [groupOpen, setGroupOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
   const colsRef = useRef<HTMLDivElement>(null)
+  const mobileColsRef = useRef<HTMLDivElement>(null)
   const groupRef = useRef<HTMLDivElement>(null)
 
-  // Close both dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (layoutRef.current && !layoutRef.current.contains(e.target as Node)) setLayoutOpen(false)
       if (colsRef.current && !colsRef.current.contains(e.target as Node)) setColsOpen(false)
+      if (mobileColsRef.current && !mobileColsRef.current.contains(e.target as Node)) setMobileColsOpen(false)
       if (groupRef.current && !groupRef.current.contains(e.target as Node)) setGroupOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMoreOpen(false)
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
   const counter =
@@ -112,20 +180,53 @@ export default function Toolbar({
       .filter(Boolean)
       .join(' · ')
 
+  const activeLayout = LAYOUTS.find((l) => l.value === layout) ?? LAYOUTS[0]
+  const activeGroupMode = GROUP_MODES.find((m) => m.value === groupMode) ?? GROUP_MODES[0]
+
+  const toggleSort = () => onSortChange(sort === 'date-desc' ? 'date-asc' : 'date-desc')
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen()
+    else document.exitFullscreen()
+  }
+
+  const renderColsDropdown = (close: () => void) => (
+    <div style={{
+      position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: '8px', overflow: 'hidden', zIndex: 50,
+      display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+    }}>
+      {Array.from({ length: colsMax - colsMin + 1 }, (_, i) => colsMin + i).map((n) => (
+        <button
+          key={n}
+          onClick={() => { onColsChange(n); close() }}
+          style={{
+            padding: '8px 14px',
+            background: cols === n ? 'var(--muted)' : 'transparent',
+            color: cols === n ? 'var(--bg)' : 'var(--fg)',
+            border: 'none', cursor: 'pointer',
+            fontSize: '14px', fontWeight: cols === n ? 700 : 400,
+            textAlign: 'center',
+          }}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <header
       className="sticky top-0 z-30"
       style={{
         background: 'var(--bg)',
         borderBottom: '1px solid var(--border)',
-        padding: '0 16px',
+        padding: '0 8px 0 10px',
       }}
     >
-      <div className="flex items-center h-11" style={{ gap: '8px' }}>
-
-        {/* title + meta */}
+      <div className="flex items-center h-11" style={{ gap: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
-          <span style={{ fontSize: '15px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 0 }}>
+          <span style={{ fontSize: '15px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1 }}>
             {albumName}
           </span>
           {albumDescription && (
@@ -140,17 +241,13 @@ export default function Toolbar({
           )}
         </div>
 
-        {/* divider — desktop only */}
         <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        {/* layout dropdown */}
-        <div style={{ position: 'relative', flexShrink: 0 }} ref={layoutRef}>
+        <div className="hidden sm:block" style={{ position: 'relative', flexShrink: 0 }} ref={layoutRef}>
           <button onClick={() => setLayoutOpen((v) => !v)} style={btn} title="בחר תצוגה">
-            <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.7 }}>תצוגה</span>
-            {LAYOUTS.find((l) => l.value === layout)?.icon}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m6 9 6 6 6-6"/>
-            </svg>
+            <span style={{ fontSize: '12px', opacity: 0.7 }}>תצוגה</span>
+            {activeLayout.icon}
+            {chevronIcon}
           </button>
           {layoutOpen && (
             <div style={{
@@ -161,7 +258,7 @@ export default function Toolbar({
               {LAYOUTS.map((l) => (
                 <button key={l.value}
                   onClick={() => { onLayoutChange(l.value); setLayoutOpen(false) }}
-                  title={l.label}
+                  title={l.description}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
                     width: '100%', padding: '8px 12px',
@@ -171,60 +268,29 @@ export default function Toolbar({
                   }}
                 >
                   {l.icon}
-                  <span>{l.label.split(' — ')[0]}</span>
+                  <span>{l.label}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* cols dropdown */}
-        <div style={{ position: 'relative', flexShrink: 0 }} ref={colsRef}>
+        <div className="hidden sm:block" style={{ position: 'relative', flexShrink: 0 }} ref={colsRef}>
           <button onClick={() => setColsOpen((v) => !v)} style={btn} title="תמונות בשורה">
-            <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.7 }}>בשורה</span>
+            <span style={{ fontSize: '12px', opacity: 0.7 }}>בשורה</span>
             <span style={{ fontWeight: 600, minWidth: '14px', textAlign: 'center' }}>{cols}</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m6 9 6 6 6-6"/>
-            </svg>
+            {chevronIcon}
           </button>
-          {colsOpen && (
-            <div style={{
-              position: 'absolute', top: 'calc(100% + 4px)', right: 0,
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: '8px', overflow: 'hidden', zIndex: 50,
-              display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
-            }}>
-              {Array.from({ length: colsMax - colsMin + 1 }, (_, i) => colsMin + i).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => { onColsChange(n); setColsOpen(false) }}
-                  style={{
-                    padding: '8px 14px',
-                    background: cols === n ? 'var(--muted)' : 'transparent',
-                    color: cols === n ? 'var(--bg)' : 'var(--fg)',
-                    border: 'none', cursor: 'pointer',
-                    fontSize: '14px', fontWeight: cols === n ? 700 : 400,
-                    textAlign: 'center',
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          )}
+          {colsOpen && renderColsDropdown(() => setColsOpen(false))}
         </div>
 
-        {/* divider — desktop only */}
         <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        {/* group dropdown */}
-        <div style={{ position: 'relative', flexShrink: 0 }} ref={groupRef}>
+        <div className="hidden sm:block" style={{ position: 'relative', flexShrink: 0 }} ref={groupRef}>
           <button onClick={() => setGroupOpen((v) => !v)} style={btn} title="קיבוץ תצוגה">
-            <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.7 }}>קיבוץ</span>
-            {GROUP_MODES.find((m) => m.value === groupMode)?.icon}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m6 9 6 6 6-6"/>
-            </svg>
+            <span style={{ fontSize: '12px', opacity: 0.7 }}>קיבוץ</span>
+            {activeGroupMode.icon}
+            {chevronIcon}
           </button>
           {groupOpen && (
             <div style={{
@@ -251,31 +317,20 @@ export default function Toolbar({
           )}
         </div>
 
-        {/* divider — desktop only */}
         <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        {/* sort */}
         <button
-          onClick={() => onSortChange(sort === 'date-desc' ? 'date-asc' : 'date-desc')}
-          title={sort === 'date-desc' ? 'מהחדש לישן — לחץ לסדר עולה' : 'מהישן לחדש — לחץ לסדר יורד'}
+          className="hidden sm:flex"
+          onClick={toggleSort}
+          title={sort === 'date-desc' ? 'מהחדש לישן - לחץ לסדר עולה' : 'מהישן לחדש - לחץ לסדר יורד'}
           style={btn}
         >
-          <span className="hidden sm:inline">מיון</span>
-          {sort === 'date-desc' ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
-              <path d="M20 4v16m0 0-3-3m3 3 3-3"/>
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="3" y1="18" x2="6" y2="18"/>
-              <path d="M20 20V4m0 0-3 3m3-3 3 3"/>
-            </svg>
-          )}
+          <span>מיון</span>
+          <SortIcon sort={sort} />
         </button>
 
-        {/* filter */}
         <button
+          className="hidden sm:flex"
           onClick={onFilterToggle}
           style={{
             ...btn,
@@ -283,29 +338,188 @@ export default function Toolbar({
             color: filterOpen ? 'var(--bg)' : 'var(--fg)',
           }}
         >
-          <span className="hidden sm:inline">סינון</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 3H2l8 9.46V19l4 2V12.46L22 3Z"/>
-          </svg>
+          <span>סינון</span>
+          {filterIcon}
         </button>
 
-        {/* divider — desktop only */}
         <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
 
-        {/* fullscreen — desktop only */}
+        <div className="sm:hidden" style={{ position: 'relative', flexShrink: 0 }} ref={mobileColsRef}>
+          <button onClick={() => setMobileColsOpen((v) => !v)} style={mobileBtn} title="תמונות בשורה">
+            <span>בשורה</span>
+            <span style={{ fontWeight: 700, minWidth: '12px', textAlign: 'center' }}>{cols}</span>
+            {chevronIcon}
+          </button>
+          {mobileColsOpen && renderColsDropdown(() => setMobileColsOpen(false))}
+        </div>
+
+        <button
+          className="sm:hidden"
+          onClick={toggleSort}
+          title={sort === 'date-desc' ? 'מהחדש לישן' : 'מהישן לחדש'}
+          style={mobileBtn}
+        >
+          <span>מיון</span>
+          <SortIcon sort={sort} />
+        </button>
+
+        <button
+          className="sm:hidden"
+          onClick={() => setMoreOpen(true)}
+          style={mobileBtn}
+          title="עוד"
+        >
+          <span>עוד</span>
+          {moreIcon}
+        </button>
+
+        <button
+          className="sm:hidden"
+          onClick={toggleFullscreen}
+          style={{ ...mobileBtn, width: '32px', justifyContent: 'center', padding: '5px 0' }}
+          title="מסך מלא"
+          aria-label="מסך מלא"
+        >
+          {fullscreenIcon}
+        </button>
+
         <button
           className="hidden sm:flex"
-          onClick={() => {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen()
-            else document.exitFullscreen()
-          }}
+          onClick={toggleFullscreen}
           style={btn}
           title="מסך מלא"
         >
-          ⛶
+          {fullscreenIcon}
         </button>
-
       </div>
+
+      {moreOpen && (
+        <div className="sm:hidden fixed inset-0" style={{ zIndex: 70 }}>
+          <button
+            aria-label="סגור"
+            onClick={() => setMoreOpen(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              border: 'none',
+              background: 'rgba(0,0,0,0.45)',
+              cursor: 'pointer',
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="עוד"
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'var(--bg)',
+              color: 'var(--fg)',
+              borderTop: '1px solid var(--border)',
+              borderRadius: '14px 14px 0 0',
+              padding: '8px 14px calc(14px + env(safe-area-inset-bottom))',
+              boxShadow: '0 -12px 40px rgba(0,0,0,0.45)',
+            }}
+          >
+            <div style={{ width: '38px', height: '4px', borderRadius: '999px', background: 'var(--border)', margin: '0 auto 10px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <strong style={{ fontSize: '15px' }}>עוד</strong>
+              <button
+                onClick={() => setMoreOpen(false)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--muted)',
+                  fontSize: '20px',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                }}
+                aria-label="סגור"
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <section style={sheetSection}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {activeLayout.icon}
+                    <span style={{ fontSize: '13px', color: 'var(--muted)' }}>תצוגה</span>
+                  </div>
+                  <strong style={{ fontSize: '14px' }}>{activeLayout.label}</strong>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {LAYOUTS.map((l) => (
+                    <button
+                      key={l.value}
+                      onClick={() => onLayoutChange(l.value)}
+                      style={{
+                        ...optionBtn,
+                        background: layout === l.value ? 'var(--muted)' : 'var(--surface)',
+                        color: layout === l.value ? 'var(--bg)' : 'var(--fg)',
+                        fontWeight: layout === l.value ? 700 : 400,
+                      }}
+                    >
+                      {l.icon}
+                      <span>{l.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section style={sheetSection}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {activeGroupMode.icon}
+                    <span style={{ fontSize: '13px', color: 'var(--muted)' }}>קיבוץ</span>
+                  </div>
+                  <strong style={{ fontSize: '14px' }}>{activeGroupMode.label}</strong>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {GROUP_MODES.map((mode) => (
+                    <button
+                      key={mode.value}
+                      onClick={() => onGroupModeChange(mode.value)}
+                      style={{
+                        ...optionBtn,
+                        background: groupMode === mode.value ? 'var(--muted)' : 'var(--surface)',
+                        color: groupMode === mode.value ? 'var(--bg)' : 'var(--fg)',
+                        fontWeight: groupMode === mode.value ? 700 : 400,
+                      }}
+                    >
+                      {mode.icon}
+                      <span>{mode.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <button
+                onClick={() => { onFilterToggle(); setMoreOpen(false) }}
+                style={{
+                  ...sheetSection,
+                  color: filterOpen ? 'var(--bg)' : 'var(--fg)',
+                  background: filterOpen ? 'var(--muted)' : 'rgba(255,255,255,0.02)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  textAlign: 'right',
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {filterIcon}
+                  <span style={{ fontSize: '13px' }}>סינון</span>
+                </span>
+                <strong style={{ fontSize: '14px' }}>{filterOpen ? 'פעיל' : 'סינון מתקדם'}</strong>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
