@@ -166,6 +166,7 @@ export default function GalleryGrid({
     const item = photo.mediaItem
     return (
       <div
+        key={item.id}
         className="relative group overflow-hidden"
         style={{ width, height, cursor: 'pointer' }}
         onClick={props.onClick}
