@@ -83,6 +83,9 @@ const mobileControlStyle: CSSProperties = {
 const mobileInputStyle: CSSProperties = {
   ...inputStyle,
   minHeight: '32px',
+  minWidth: 0,
+  width: '100%',
+  boxSizing: 'border-box',
   padding: '5px 8px',
   fontSize: '13px',
 }
@@ -312,7 +315,7 @@ export default function FilterPanel({
 
             <div style={mobileRowStyle}>
               <span style={mobileLabelStyle}>טווח</span>
-              <div style={{ ...mobileSegmentStyle, gridTemplateColumns: '1fr 1fr' }}>
+              <div style={{ ...mobileSegmentStyle, gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
                 <input
                   type="date"
                   className="outline-none"
