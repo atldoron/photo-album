@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import { RowsPhotoAlbum, MasonryPhotoAlbum } from 'react-photo-album'
+import { MasonryPhotoAlbum } from 'react-photo-album'
 import type { Photo, RenderPhotoProps, RenderPhotoContext } from 'react-photo-album'
 import 'react-photo-album/rows.css'
 import 'react-photo-album/masonry.css'
@@ -98,8 +98,49 @@ export default function GalleryGrid({
     const maxByWidth = Math.max(1, Math.floor(containerWidth / 40))
     return Math.min(cols, maxByWidth)
   }
-  const targetRowHeight = (containerWidth: number) =>
-    Math.round(containerWidth / (responsiveColumns(containerWidth) * 1.5))
+  function renderGridItem(item: MediaItem, index: number) {
+    const favStatus = isFav(item.id)
+
+    return (
+      <div
+        key={item.id}
+        className="relative group overflow-hidden"
+        style={{ cursor: 'pointer', aspectRatio: '1 / 1' }}
+        onClick={() => onOpen(index)}
+      >
+        <img
+          src={item.thumbnailUrl}
+          alt={item.name}
+          loading="lazy"
+          draggable={false}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+        {item.type === 'video' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div
+              className="rounded-full w-10 h-10 flex items-center justify-center text-white text-lg"
+              style={{ background: 'rgba(0,0,0,0.55)' }}
+            >
+              ▶
+            </div>
+          </div>
+        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFav(item.id) }}
+          className="absolute top-1 end-1 text-xl leading-none z-10 transition-opacity"
+          style={{
+            opacity: favStatus ? 1 : 0.45,
+            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = favStatus ? '1' : '0.45')}
+          aria-label={favStatus ? 'הסר ממועדפים' : 'הוסף למועדפים'}
+        >
+          {favStatus ? '⭐' : '☆'}
+        </button>
+      </div>
+    )
+  }
 
   function renderPhoto(
     props: RenderPhotoProps,
@@ -163,14 +204,21 @@ export default function GalleryGrid({
       style={{ touchAction: 'pan-y' }}
     >
       {(layout === 'rows' || layout === 'columns') && (
-        <RowsPhotoAlbum
-          {...sharedProps}
-          targetRowHeight={targetRowHeight}
-          rowConstraints={(containerWidth) => {
-            const cols = responsiveColumns(containerWidth)
-            return { minPhotos: 1, maxPhotos: cols }
-          }}
-        />
+        <div
+          className="react-photo-album react-photo-album--rows"
+          role="group"
+          aria-label="Photo album"
+        >
+          <div
+            className="grid"
+            style={{
+              gap: 2,
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+            }}
+          >
+            {items.map(renderGridItem)}
+          </div>
+        </div>
       )}
       {layout === 'masonry' && (
         <MasonryPhotoAlbum {...sharedProps} columns={responsiveColumns} />

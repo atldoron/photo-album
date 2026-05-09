@@ -33,6 +33,32 @@ const DEFAULT_FILTER: FilterState = {
   favoritesOnly: false,
 }
 
+function subscribeNoop() {
+  return () => {}
+}
+
+function AlbumHydrationLoading() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div
+        className="px-4 py-4 flex items-center justify-between"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        <div>
+          <div className="h-6 w-40 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+          <div className="h-4 w-60 rounded mt-2 animate-pulse" style={{ background: 'var(--border)' }} />
+        </div>
+        <div className="h-8 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+      </div>
+      <div className="flex-1 p-4 grid gap-1" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+        {Array.from({ length: 18 }).map((_, i) => (
+          <div key={i} className="rounded animate-pulse aspect-square" style={{ background: 'var(--border)' }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function getOrientationSnapshot(): Orientation {
   if (typeof window === 'undefined') return 'portrait'
   return window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape'
@@ -93,6 +119,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [page, setPage] = useState(1)
 
+  const isHydrated = useSyncExternalStore(subscribeNoop, () => true, () => false)
   const orientation = useSyncExternalStore(
     subscribeToOrientation,
     getOrientationSnapshot,
@@ -161,6 +188,8 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
 
   const imageCount = media.filter((m) => m.type === 'image').length
   const videoCount = media.filter((m) => m.type === 'video').length
+
+  if (!isHydrated) return <AlbumHydrationLoading />
 
   function handleOpenLightbox(index: number) {
     setLightboxIndex(index)
