@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import type { Layout, SortOption } from '@/types'
+import type { GroupMode, Layout, SortOption } from '@/types'
 
 interface ToolbarProps {
   albumName: string
@@ -12,10 +12,12 @@ interface ToolbarProps {
   cols: number
   colsMin: number
   colsMax: number
+  groupMode: GroupMode
   sort: SortOption
   filterOpen: boolean
   onLayoutChange: (l: Layout) => void
   onColsChange: (n: number) => void
+  onGroupModeChange: (m: GroupMode) => void
   onSortChange: (s: SortOption) => void
   onFilterToggle: () => void
 }
@@ -42,6 +44,32 @@ const LAYOUTS: { value: Layout; label: string; icon: React.ReactNode }[] = [
   },
 ]
 
+const GROUP_MODES: { value: GroupMode; label: string; icon: React.ReactNode }[] = [
+  {
+    value: 'continuous',
+    label: 'רציף',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" y1="6" x2="20" y2="6" />
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <line x1="4" y1="18" x2="20" y2="18" />
+      </svg>
+    ),
+  },
+  {
+    value: 'by-day',
+    label: 'לפי ימים',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+]
+
 const btn: React.CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',
@@ -58,19 +86,22 @@ const btn: React.CSSProperties = {
 
 export default function Toolbar({
   albumName, albumDescription, imageCount, videoCount,
-  layout, cols, colsMin, colsMax, sort, filterOpen,
-  onLayoutChange, onColsChange, onSortChange, onFilterToggle,
+  layout, cols, colsMin, colsMax, groupMode, sort, filterOpen,
+  onLayoutChange, onColsChange, onGroupModeChange, onSortChange, onFilterToggle,
 }: ToolbarProps) {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [colsOpen, setColsOpen] = useState(false)
+  const [groupOpen, setGroupOpen] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
   const colsRef = useRef<HTMLDivElement>(null)
+  const groupRef = useRef<HTMLDivElement>(null)
 
   // Close both dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (layoutRef.current && !layoutRef.current.contains(e.target as Node)) setLayoutOpen(false)
       if (colsRef.current && !colsRef.current.contains(e.target as Node)) setColsOpen(false)
+      if (groupRef.current && !groupRef.current.contains(e.target as Node)) setGroupOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -177,6 +208,43 @@ export default function Toolbar({
                   }}
                 >
                   {n}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* divider — desktop only */}
+        <div className="hidden sm:block" style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
+
+        {/* group dropdown */}
+        <div style={{ position: 'relative', flexShrink: 0 }} ref={groupRef}>
+          <button onClick={() => setGroupOpen((v) => !v)} style={btn} title="קיבוץ תצוגה">
+            <span className="hidden sm:inline" style={{ fontSize: '12px', opacity: 0.7 }}>קיבוץ</span>
+            {GROUP_MODES.find((m) => m.value === groupMode)?.icon}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          {groupOpen && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: '8px', overflow: 'hidden', zIndex: 50, minWidth: '130px',
+            }}>
+              {GROUP_MODES.map((mode) => (
+                <button key={mode.value}
+                  onClick={() => { onGroupModeChange(mode.value); setGroupOpen(false) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    width: '100%', padding: '8px 12px',
+                    background: groupMode === mode.value ? 'var(--muted)' : 'transparent',
+                    color: groupMode === mode.value ? 'var(--bg)' : 'var(--fg)',
+                    border: 'none', cursor: 'pointer', fontSize: '13px', direction: 'rtl',
+                  }}
+                >
+                  {mode.icon}
+                  <span>{mode.label}</span>
                 </button>
               ))}
             </div>

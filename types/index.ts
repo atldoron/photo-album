@@ -3,6 +3,7 @@ export type SortOption = 'date-desc' | 'date-asc'
 export type MediaType = 'all' | 'image' | 'video'
 export type MediaOrientation = 'all' | 'landscape' | 'portrait'
 export type DatePreset = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom'
+export type GroupMode = 'continuous' | 'by-day'
 
 export interface Album {
   id: string

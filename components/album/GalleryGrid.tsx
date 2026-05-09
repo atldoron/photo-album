@@ -18,6 +18,7 @@ interface GalleryGridProps {
   cols: number
   colsMin: number
   colsMax: number
+  showLoadMore?: boolean
   isFav: (id: string) => boolean
   onToggleFav: (id: string) => void
   onOpen: (index: number) => void
@@ -27,7 +28,7 @@ interface GalleryGridProps {
 }
 
 export default function GalleryGrid({
-  items, layout, cols, colsMin, colsMax, isFav, onToggleFav, onOpen, onColsChange, hasMore, onLoadMore,
+  items, layout, cols, colsMin, colsMax, showLoadMore = true, isFav, onToggleFav, onOpen, onColsChange, hasMore, onLoadMore,
 }: GalleryGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -241,7 +242,7 @@ export default function GalleryGrid({
 
       {/* Infinite scroll sentinel + skeleton */}
       <div ref={sentinelRef} className="mt-1">
-        {hasMore && (
+        {showLoadMore && hasMore && (
           <div
             className="grid gap-0.5"
             style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}

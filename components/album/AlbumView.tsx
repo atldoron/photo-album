@@ -8,7 +8,7 @@ import GalleryGrid from './GalleryGrid'
 import LightboxViewer from './LightboxViewer'
 import { useFavorites } from '@/hooks/useFavorites'
 import { sortMedia } from '@/lib/utils'
-import type { Album, MediaItem, Layout, SortOption, FilterState } from '@/types'
+import type { Album, MediaItem, Layout, SortOption, FilterState, GroupMode } from '@/types'
 
 const PAGE_SIZE = 60
 const COLS_MIN = 2
@@ -24,6 +24,13 @@ type Orientation = 'portrait' | 'landscape'
 interface AlbumViewProps {
   album: Album
   media: MediaItem[]
+}
+
+interface DayGroup {
+  key: string
+  label: string
+  items: MediaItem[]
+  indices: number[]
 }
 
 const DEFAULT_FILTER: FilterState = {
@@ -122,12 +129,45 @@ function getStoredColsSnapshot(albumId: string) {
   return `${readStoredCols(albumId, 'portrait')}:${readStoredCols(albumId, 'landscape')}`
 }
 
+function getDayGroupInfo(item: MediaItem) {
+  if (!item.takenAt) return { key: 'no-date', label: 'ללא תאריך צילום' }
+
+  const date = new Date(item.takenAt)
+  if (Number.isNaN(date.getTime())) return { key: 'no-date', label: 'ללא תאריך צילום' }
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return {
+    key: `${year}-${month}-${day}`,
+    label: date.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  }
+}
+
+function groupItemsByDay(items: MediaItem[]): DayGroup[] {
+  return items.reduce<DayGroup[]>((groups, item, index) => {
+    const info = getDayGroupInfo(item)
+    const group = groups.find((current) => current.key === info.key)
+
+    if (group) {
+      group.items.push(item)
+      group.indices.push(index)
+    } else {
+      groups.push({ ...info, items: [item], indices: [index] })
+    }
+
+    return groups
+  }, [])
+}
+
 export default function AlbumView({ album, media }: AlbumViewProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
 
   const [layout, setLayout] = useState<Layout>(album.defaultLayout)
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
+  const [groupMode, setGroupMode] = useState<GroupMode>('continuous')
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
   const [filterOpen, setFilterOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -148,7 +188,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const cols = orientation === 'portrait' ? portraitCols : landscapeCols
   const colsMin = COLS_MIN
   const colsMax = orientation === 'portrait' ? PORTRAIT_MAX_COLS : LANDSCAPE_MAX_COLS
-  const galleryKey = `${orientation}-${layout}-${cols}`
+  const galleryKey = `${orientation}-${layout}-${cols}-${groupMode}`
 
   const { isFav, toggle } = useFavorites(album.id)
 
@@ -203,6 +243,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
 
   const filteredSorted = sortMedia(filteredItems, sort)
   const visibleItems = filteredSorted.slice(0, page * PAGE_SIZE)
+  const visibleDayGroups = groupMode === 'by-day' ? groupItemsByDay(visibleItems) : []
   const hasMore = visibleItems.length < filteredSorted.length
   const handleLoadMore = useCallback(() => setPage((p) => p + 1), [])
 
@@ -248,10 +289,12 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
         cols={cols}
         colsMin={colsMin}
         colsMax={colsMax}
+        groupMode={groupMode}
         sort={sort}
         filterOpen={filterOpen}
         onLayoutChange={setLayout}
         onColsChange={handleColsChange}
+        onGroupModeChange={setGroupMode}
         onSortChange={handleSortChange}
         onFilterToggle={() => setFilterOpen((v) => !v)}
       />
@@ -269,6 +312,37 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
       {filteredSorted.length === 0 ? (
         <div className="flex-1 flex items-center justify-center" style={{ color: 'var(--muted)' }}>
           <p>לא נמצאו פריטים</p>
+        </div>
+      ) : groupMode === 'by-day' ? (
+        <div className="flex-1 p-2">
+          {visibleDayGroups.map((group, groupIndex) => (
+            <section key={group.key} className={groupIndex === 0 ? '' : 'mt-5'}>
+              <div
+                className="flex items-center justify-between gap-3 px-1 py-2"
+                style={{ borderBottom: '1px solid var(--border)' }}
+              >
+                <h2 className="text-sm font-semibold">{group.label}</h2>
+                <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                  {group.items.length} פריטים
+                </span>
+              </div>
+              <GalleryGrid
+                key={`${galleryKey}-${group.key}`}
+                items={group.items}
+                layout={layout}
+                cols={cols}
+                colsMin={colsMin}
+                colsMax={colsMax}
+                showLoadMore={groupIndex === visibleDayGroups.length - 1}
+                isFav={isFav}
+                onToggleFav={toggle}
+                onOpen={(index) => handleOpenLightbox(group.indices[index] ?? 0)}
+                onColsChange={handleColsChange}
+                hasMore={groupIndex === visibleDayGroups.length - 1 && hasMore}
+                onLoadMore={handleLoadMore}
+              />
+            </section>
+          ))}
         </div>
       ) : (
         <GalleryGrid
