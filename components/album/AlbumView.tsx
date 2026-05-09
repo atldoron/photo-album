@@ -17,6 +17,7 @@ const PORTRAIT_MAX_COLS = 5
 const LANDSCAPE_DEFAULT_COLS = 5
 const LANDSCAPE_MAX_COLS = 10
 const COLS_CHANGED_EVENT = 'photo-album-cols-changed'
+const COLS_STORAGE_VERSION = 'v2'
 
 type Orientation = 'portrait' | 'landscape'
 
@@ -40,6 +41,17 @@ function subscribeNoop() {
 function AlbumHydrationLoading() {
   return (
     <div className="min-h-screen flex flex-col">
+      <style>{`
+        .album-hydration-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        @media (orientation: landscape) {
+          .album-hydration-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+          }
+        }
+      `}</style>
       <div
         className="px-4 py-4 flex items-center justify-between"
         style={{ borderBottom: '1px solid var(--border)' }}
@@ -50,7 +62,7 @@ function AlbumHydrationLoading() {
         </div>
         <div className="h-8 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
       </div>
-      <div className="flex-1 p-4 grid gap-1" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+      <div className="album-hydration-grid flex-1 p-4 grid gap-1">
         {Array.from({ length: 18 }).map((_, i) => (
           <div key={i} className="rounded animate-pulse aspect-square" style={{ background: 'var(--border)' }} />
         ))}
@@ -83,7 +95,7 @@ function clampCols(value: number, orientation: Orientation) {
 }
 
 function columnStorageKey(albumId: string, orientation: Orientation) {
-  return `cols_${orientation}_${albumId}`
+  return `cols_${COLS_STORAGE_VERSION}_${orientation}_${albumId}`
 }
 
 function readStoredCols(albumId: string, orientation: Orientation) {
