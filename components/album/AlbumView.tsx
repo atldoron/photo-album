@@ -28,6 +28,8 @@ interface AlbumViewProps {
 
 const DEFAULT_FILTER: FilterState = {
   mediaType: 'all',
+  orientation: 'all',
+  datePreset: 'all',
   dateFrom: '',
   dateTo: '',
   search: '',
@@ -179,6 +181,12 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   if (filter.mediaType !== 'all') {
     filteredItems = filteredItems.filter((m) => m.type === filter.mediaType)
   }
+  if (filter.orientation !== 'all') {
+    filteredItems = filteredItems.filter((m) => {
+      if (!m.width || !m.height) return false
+      return filter.orientation === 'landscape' ? m.width >= m.height : m.height > m.width
+    })
+  }
   if (filter.favoritesOnly) {
     filteredItems = filteredItems.filter((m) => isFav(m.id))
   }
@@ -251,6 +259,8 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
       {filterOpen && (
         <FilterPanel
           filter={filter}
+          totalCount={media.length}
+          filteredCount={filteredSorted.length}
           onChange={handleFilterChange}
           onClose={() => setFilterOpen(false)}
         />
