@@ -22,8 +22,6 @@ export async function POST(req: NextRequest) {
     name: body.name,
     description: body.description ?? '',
     driveFolder: body.driveFolder,
-    defaultLayout: body.defaultLayout ?? 'rows',
-    defaultSize: body.defaultSize ?? 50,
     defaultSort: body.defaultSort ?? 'date-desc',
     createdAt: new Date().toISOString(),
     order: maxOrder + 1,

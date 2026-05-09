@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Modal from '@/components/ui/Modal'
-import type { Album, Layout } from '@/types'
+import type { Album } from '@/types'
 
 interface AlbumFormProps {
   open: boolean
@@ -10,12 +10,6 @@ interface AlbumFormProps {
   onSave: (data: Omit<Album, 'createdAt' | 'order'>, originalId?: string) => Promise<void>
   initial?: Album
 }
-
-const LAYOUTS: { value: Layout; label: string }[] = [
-  { value: 'rows', label: 'שורות (Rows)' },
-  { value: 'masonry', label: 'Masonry' },
-]
-
 
 const inputCls =
   'w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
@@ -28,8 +22,6 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
     name: initial?.name ?? '',
     description: initial?.description ?? '',
     driveFolder: initial?.driveFolder ?? '',
-    defaultLayout: ((initial?.defaultLayout === 'columns' ? 'rows' : initial?.defaultLayout) ?? 'rows') as Layout,
-    defaultSize: initial?.defaultSize ?? 50,
     defaultSort: initial?.defaultSort ?? 'date-desc',
   })
   const [saving, setSaving] = useState(false)
@@ -43,7 +35,7 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.id || !form.name || !form.driveFolder) {
-      setError('יש למלא את כל השדות החובה')
+      setError('יש למלא את כל שדות החובה')
       return
     }
     if (!/^[a-z0-9-]+$/.test(form.id)) {
@@ -53,10 +45,7 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
     setSaving(true)
     setError('')
     try {
-      await onSave(
-        { ...form, defaultLayout: form.defaultLayout as Layout },
-        originalId,
-      )
+      await onSave(form, originalId)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'שגיאה בשמירה')
@@ -97,21 +86,6 @@ export default function AlbumForm({ open, onClose, onSave, initial }: AlbumFormP
           <input className={inputCls} style={inputStyle} value={form.driveFolder}
             onChange={(e) => set('driveFolder', e.target.value)}
             placeholder="https://drive.google.com/drive/folders/..." />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>פריסה ברירת מחדל</label>
-            <select className={inputCls} style={inputStyle} value={form.defaultLayout}
-              onChange={(e) => set('defaultLayout', e.target.value as Layout)}>
-              {LAYOUTS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-            </select>
-          </div>
-        </div>
-        <div>
-          <label className={labelCls}>גודל תמונות ברירת מחדל: {form.defaultSize}</label>
-          <input type="range" min={10} max={100} value={form.defaultSize}
-            onChange={(e) => set('defaultSize', Number(e.target.value))}
-            className="w-full accent-blue-500" />
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

@@ -40,8 +40,6 @@
   "name": "טיול משפחתי 2024",
   "description": "חופשה בדרום הארץ",
   "driveFolder": "https://drive.google.com/drive/folders/FOLDER_ID",
-  "defaultLayout": "rows",
-  "defaultSize": 50,
   "defaultSort": "date-desc",
   "createdAt": "2024-08-15T10:00:00Z",
   "order": 3
@@ -56,8 +54,6 @@
 | `name` | string | שם לתצוגה בעברית |
 | `description` | string | תיאור חופשי |
 | `driveFolder` | string | קישור לתיקיית Google Drive |
-| `defaultLayout` | `rows` / `masonry` / `grid` | פריסת ברירת מחדל |
-| `defaultSize` | number (1–100) | ערך ה-Slider לגודל תמונות |
 | `defaultSort` | `date-desc` / `date-asc` / `name-asc` / `name-desc` | מיון ברירת מחדל |
 | `createdAt` | ISO string | תאריך יצירה |
 | `order` | number | סדר הצגה ידני |
@@ -102,7 +98,7 @@
 ## 6. Client-Side Storage
 
 - **מועדפים (כוכבים):** נשמרים ב-`localStorage` לפי מזהה פריט
-- **הגדרות תצוגה (פריסה, גודל, מיון):** לא נשמרות — מתאפסות לברירת מחדל של האלבום בכל טעינה
+- **הגדרות תצוגה:** מספר תמונות בשורה נשמר בנפרד לפי מצב תצוגה במכשיר; פריסה וקיבוץ מנוהלים בצד הלקוח ואינם חלק מנתוני האלבום
 
 ---
 

@@ -165,7 +165,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const [layout, setLayout] = useState<Layout>(album.defaultLayout)
+  const [layout, setLayout] = useState<Layout>('rows')
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [groupMode, setGroupMode] = useState<GroupMode>('continuous')
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)

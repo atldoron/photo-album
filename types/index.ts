@@ -10,8 +10,6 @@ export interface Album {
   name: string
   description: string
   driveFolder: string
-  defaultLayout: Layout
-  defaultSize: number
   defaultSort: SortOption
   createdAt: string
   order: number
