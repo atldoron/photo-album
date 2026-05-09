@@ -297,6 +297,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
         onGroupModeChange={setGroupMode}
         onSortChange={handleSortChange}
         onFilterToggle={() => setFilterOpen((v) => !v)}
+        onFilterOpen={() => setFilterOpen(true)}
       />
 
       {filterOpen && (

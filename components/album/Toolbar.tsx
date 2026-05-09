@@ -21,6 +21,7 @@ interface ToolbarProps {
   onGroupModeChange: (m: GroupMode) => void
   onSortChange: (s: SortOption) => void
   onFilterToggle: () => void
+  onFilterOpen: () => void
 }
 
 const rowsIcon = (
@@ -114,10 +115,34 @@ const sheetSection: CSSProperties = {
   background: 'rgba(255,255,255,0.02)',
 }
 
+const sheetCompactRow: CSSProperties = {
+  ...sheetSection,
+  display: 'grid',
+  gridTemplateColumns: 'auto minmax(0, 1fr)',
+  alignItems: 'center',
+  gap: '10px',
+}
+
+const sheetRowTitle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '7px',
+  fontSize: '13px',
+  color: 'var(--muted)',
+  whiteSpace: 'nowrap',
+}
+
+const sheetRowOptions: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '8px',
+  minWidth: 0,
+}
+
 const optionBtn: CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: '6px',
-  padding: '8px 10px',
+  padding: '7px 8px',
   fontSize: '13px',
   display: 'flex',
   alignItems: 'center',
@@ -144,7 +169,7 @@ function SortIcon({ sort }: { sort: SortOption }) {
 export default function Toolbar({
   albumName, albumDescription, imageCount, videoCount,
   layout, cols, colsMin, colsMax, groupMode, sort, filterOpen,
-  onLayoutChange, onColsChange, onGroupModeChange, onSortChange, onFilterToggle,
+  onLayoutChange, onColsChange, onGroupModeChange, onSortChange, onFilterToggle, onFilterOpen,
 }: ToolbarProps) {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [colsOpen, setColsOpen] = useState(false)
@@ -424,6 +449,7 @@ export default function Toolbar({
               left: 0,
               right: 0,
               bottom: 0,
+              zIndex: 1,
               background: 'var(--bg)',
               color: 'var(--fg)',
               borderTop: '1px solid var(--border)',
@@ -452,15 +478,12 @@ export default function Toolbar({
             </div>
 
             <div style={{ display: 'grid', gap: '10px' }}>
-              <section style={sheetSection}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <section style={sheetCompactRow}>
+                <div style={sheetRowTitle}>
                     {activeLayout.icon}
                     <span style={{ fontSize: '13px', color: 'var(--muted)' }}>תצוגה</span>
-                  </div>
-                  <strong style={{ fontSize: '14px' }}>{activeLayout.label}</strong>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={sheetRowOptions}>
                   {LAYOUTS.map((l) => (
                     <button
                       key={l.value}
@@ -479,15 +502,12 @@ export default function Toolbar({
                 </div>
               </section>
 
-              <section style={sheetSection}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <section style={sheetCompactRow}>
+                <div style={sheetRowTitle}>
                     {activeGroupMode.icon}
                     <span style={{ fontSize: '13px', color: 'var(--muted)' }}>קיבוץ</span>
-                  </div>
-                  <strong style={{ fontSize: '14px' }}>{activeGroupMode.label}</strong>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={sheetRowOptions}>
                   {GROUP_MODES.map((mode) => (
                     <button
                       key={mode.value}
@@ -507,7 +527,8 @@ export default function Toolbar({
               </section>
 
               <button
-                onClick={() => { onFilterToggle(); setMoreOpen(false) }}
+                type="button"
+                onClick={() => { setMoreOpen(false); onFilterOpen() }}
                 style={{
                   ...sheetSection,
                   color: filterOpen ? 'var(--bg)' : 'var(--fg)',
