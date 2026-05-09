@@ -27,13 +27,13 @@ export default function InfoPanel({ item }: { item: MediaItem }) {
   const [gps, setGps] = useState<GpsState>({ status: 'idle' })
 
   useEffect(() => {
-    setGps({ status: 'loading' })
+    queueMicrotask(() => setGps({ status: 'loading' }))
 
     // First try GPS already on the item (may be present for some albums)
     if (item.latitude != null && item.longitude != null) {
       const lat = item.latitude
       const lng = item.longitude
-      setGps({ status: 'done', latitude: lat, longitude: lng })
+      queueMicrotask(() => setGps({ status: 'done', latitude: lat, longitude: lng }))
       getPlaceName(lat, lng).then((name) =>
         setGps((g) => ({ ...g, placeName: name ?? undefined }))
       )

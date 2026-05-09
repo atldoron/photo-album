@@ -17,7 +17,7 @@ export function useFavorites(albumId: string) {
         stored.add(k.slice(`fav_${albumId}_`.length))
       }
     }
-    setFavs(stored)
+    queueMicrotask(() => setFavs(stored))
   }, [albumId])
 
   const toggle = useCallback(

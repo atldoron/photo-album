@@ -32,8 +32,6 @@ export default function GalleryGrid({
   const sentinelRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pinchRef = useRef<{ startDist: number; startCols: number } | null>(null)
-  const colsRef = useRef(cols)
-  colsRef.current = cols
 
   // Infinite scroll
   useEffect(() => {
@@ -60,7 +58,7 @@ export default function GalleryGrid({
 
     function onStart(e: TouchEvent) {
       if (e.touches.length === 2) {
-        pinchRef.current = { startDist: dist(e.touches), startCols: colsRef.current }
+        pinchRef.current = { startDist: dist(e.touches), startCols: cols }
       }
     }
 
@@ -83,7 +81,7 @@ export default function GalleryGrid({
       el.removeEventListener('touchmove', onMove)
       el.removeEventListener('touchend', onEnd)
     }
-  }, [onColsChange, colsMin, colsMax])
+  }, [onColsChange, cols, colsMin, colsMax])
 
   const photos: GalleryPhoto[] = items.map((item) => ({
     src: item.thumbnailUrl,
@@ -107,7 +105,7 @@ export default function GalleryGrid({
     props: RenderPhotoProps,
     context: RenderPhotoContext<GalleryPhoto>
   ) {
-    const { photo, index, width, height } = context
+    const { photo, width, height } = context
     const item = photo.mediaItem
     return (
       <div
@@ -155,6 +153,7 @@ export default function GalleryGrid({
     spacing: 2,
     render: { photo: renderPhoto },
     onClick: ({ index }: { index: number }) => onOpen(index),
+    defaultContainerWidth: 1200,
   }
 
   return (
@@ -169,7 +168,7 @@ export default function GalleryGrid({
           targetRowHeight={targetRowHeight}
           rowConstraints={(containerWidth) => {
             const cols = responsiveColumns(containerWidth)
-            return { minPhotos: cols, maxPhotos: cols }
+            return { minPhotos: 1, maxPhotos: cols }
           }}
         />
       )}

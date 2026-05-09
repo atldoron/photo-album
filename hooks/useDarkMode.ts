@@ -8,7 +8,7 @@ export function useDarkMode() {
   useEffect(() => {
     const stored = localStorage.getItem('theme')
     const isDark = stored !== 'light'
-    setDark(isDark)
+    queueMicrotask(() => setDark(isDark))
     document.documentElement.classList.toggle('dark', isDark)
   }, [])
 

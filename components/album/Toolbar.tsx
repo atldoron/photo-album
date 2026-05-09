@@ -56,10 +56,6 @@ const btn: React.CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
-const divider = (
-  <div style={{ width: '1px', height: '18px', background: 'var(--border)', flexShrink: 0 }} />
-)
-
 export default function Toolbar({
   albumName, albumDescription, imageCount, videoCount,
   layout, cols, colsMin, colsMax, sort, filterOpen,
