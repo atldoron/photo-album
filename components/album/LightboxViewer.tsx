@@ -90,7 +90,7 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             <button
               key="fav"
               onClick={() => current && onToggleFav(current.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, padding: '8px', color: '#fff' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, padding: '8px', color: '#fff', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.8))' }}
               title={current && isFav(current.id) ? 'הסר ממועדפים' : 'הוסף למועדפים'}
             >
               {current && isFav(current.id) ? '⭐' : '☆'}
@@ -99,7 +99,7 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             <button
               key="download"
               onClick={() => current && window.open(current.downloadUrl, '_blank')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: '#fff', display: 'flex', alignItems: 'center' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: '#fff', display: 'flex', alignItems: 'center', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.8))' }}
               title="הורד קובץ מקורי"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -110,16 +110,85 @@ export default function LightboxViewer({ items, index, onClose, onNavigate, isFa
             <button
               key="info"
               onClick={() => setShowInfo((v) => !v)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: '8px', color: '#fff' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: '8px', color: '#fff', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.8))' }}
               title="פרטי צילום"
             >
               ℹ️
             </button>,
             'fullscreen',
-            'close',
           ],
         }}
       />
+
+      {/* Lightbox header bar — gradient + close button, always above YARL (z 10001) */}
+      {createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10001,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            direction: 'rtl',
+            padding: '10px 12px',
+            paddingTop: 'calc(10px + env(safe-area-inset-top))',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 60%, transparent 100%)',
+            pointerEvents: 'none',
+            gap: '10px',
+          }}
+        >
+          {/* Close button — reading-start (right in RTL) */}
+          <button
+            onClick={onClose}
+            style={{
+              pointerEvents: 'auto',
+              flexShrink: 0,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'rgba(0,0,0,0.55)',
+              border: '1px solid rgba(255,255,255,0.22)',
+              color: '#fff',
+              fontSize: 18,
+              lineHeight: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-label="סגור"
+            title="סגור"
+          >
+            ✕
+          </button>
+
+          {/* Photo filename */}
+          {current && (
+            <span
+              style={{
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                color: 'rgba(255,255,255,0.88)',
+                fontSize: '13px',
+                lineHeight: '36px',
+                textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+                textAlign: 'center',
+              }}
+            >
+              {current.name}
+            </span>
+          )}
+
+          {/* Spacer to keep title centred */}
+          <div style={{ flexShrink: 0, width: 36 }} />
+        </div>,
+        document.body
+      )}
 
       {/* Info panel overlay — rendered in a portal so it sits above YARL's own portal */}
       {showInfo && current && createPortal(

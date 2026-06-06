@@ -25,8 +25,42 @@ function getAuth() {
   })
 }
 
+function getMockMedia(): MediaItem[] {
+  // Deterministic mock set — portrait + landscape mix for layout testing
+  const items: MediaItem[] = []
+  const sizes: [number, number][] = [
+    [800, 1200], [1200, 800], [900, 1200], [1200, 900],
+    [1200, 800], [800, 1200], [1000, 1000], [1200, 800],
+    [800, 1200], [1200, 800], [900, 1100], [1100, 800],
+    [800, 1200], [1200, 900], [1200, 800], [800, 1000],
+    [1200, 800], [800, 1200], [1200, 800], [800, 1200],
+  ]
+  for (let i = 0; i < 80; i++) {
+    const [w, h] = sizes[i % sizes.length]
+    const seed = i + 10
+    const day = String((i % 28) + 1).padStart(2, '0')
+    const month = String(Math.floor(i / 28) + 1).padStart(2, '0')
+    items.push({
+      id: `mock-${i}`,
+      name: `IMG_${String(i + 1).padStart(4, '0')}.jpg`,
+      mimeType: 'image/jpeg',
+      type: 'image',
+      thumbnailUrl: `https://picsum.photos/seed/${seed}/400/300`,
+      viewUrl: `https://picsum.photos/seed/${seed}/${w}/${h}`,
+      downloadUrl: `https://picsum.photos/seed/${seed}/${w}/${h}`,
+      width: w,
+      height: h,
+      takenAt: `2026-${month}-${day}T10:${String(i % 60).padStart(2, '0')}:00`,
+    })
+  }
+  return items
+}
+
 export async function getAlbumMedia(folderUrl: string): Promise<MediaItem[]> {
   const folderId = extractFolderId(folderUrl)
+
+  // Local dev mock — used when driveFolder is "mock"
+  if (folderId === 'mock') return getMockMedia()
   const auth = getAuth()
   const drive = google.drive({ version: 'v3', auth })
 

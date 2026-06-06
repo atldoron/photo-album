@@ -12,7 +12,7 @@ import type { Album, MediaItem, Layout, SortOption, FilterState, GroupMode } fro
 
 const PAGE_SIZE = 60
 const COLS_MIN = 2
-const PORTRAIT_DEFAULT_COLS = 3
+const PORTRAIT_DEFAULT_COLS = 2
 const PORTRAIT_MAX_COLS = 5
 const LANDSCAPE_DEFAULT_COLS = 5
 const LANDSCAPE_MAX_COLS = 10
@@ -52,7 +52,7 @@ function AlbumHydrationLoading() {
     <div className="min-h-screen flex flex-col">
       <style>{`
         .album-hydration-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         @media (orientation: landscape) {
@@ -165,7 +165,7 @@ export default function AlbumView({ album, media }: AlbumViewProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const [layout, setLayout] = useState<Layout>('rows')
+  const [layout, setLayout] = useState<Layout>('masonry')
   const [sort, setSort] = useState<SortOption>(album.defaultSort)
   const [groupMode, setGroupMode] = useState<GroupMode>('continuous')
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)

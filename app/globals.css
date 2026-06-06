@@ -27,3 +27,13 @@ body {
 
 /* yet-another-react-lightbox */
 @import "yet-another-react-lightbox/styles.css";
+
+/* Force dark backdrop so the lightbox is always legible regardless of image content */
+:root {
+  --yarl__color_backdrop: rgba(0, 0, 0, 0.96);
+}
+
+/* Toolbar action buttons: drop-shadow keeps them readable over any image */
+.yarl__button {
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.85)) !important;
+}
