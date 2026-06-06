@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# אלבום תמונות — Photo Album
 
-## Getting Started
+אפליקציית ווב לניהול והצגת אלבומי תמונות וסרטונים מ-Google Drive.
 
-First, run the development server:
+## טכנולוגיות
+
+- **Next.js 16** (App Router, Turbopack)
+- **TypeScript 5**, **Tailwind CSS 4**
+- **react-photo-album** — גלרייה (Rows / Masonry)
+- **yet-another-react-lightbox** — מציג מלא
+- **Vercel KV** (Redis) — אחסון נתוני אלבומים
+- **Google Drive API** — מקור התמונות והסרטונים
+- **@dnd-kit** — גרירה ושחרור בפאנל הניהול
+
+## הפעלה מקומית
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+פתח [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### משתני סביבה (.env.local)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+GOOGLE_SERVICE_ACCOUNT={"type":"service_account",...}   # JSON מלא של Service Account
 
-## Learn More
+# Vercel KV (מועתק מלוח הבקרה של Vercel)
+KV_URL=
+KV_REST_API_URL=
+KV_REST_API_TOKEN=
+KV_REST_API_READ_ONLY_TOKEN=
+```
 
-To learn more about Next.js, take a look at the following resources:
+### פיתוח מקומי ללא Google Drive
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+ב-`lib/albums.json` (נתיב מקומי בלבד, ב-`.gitignore`), הגדר `driveFolder: "mock"` —
+האפליקציה תטען 80 תמונות לדוגמה מ-picsum.photos.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## פריסה
 
-## Deploy on Vercel
+```bash
+vercel deploy --prod
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## מבנה הפרויקט
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+├── layout.tsx              # Root layout — RTL, dark theme, metadata
+├── page.tsx                # פאנל ניהול (/)
+├── globals.css             # Tailwind + YARL overrides
+└── album/[slug]/
+    └── page.tsx            # תצוגת אלבום (/album/[slug])
+
+components/
+├── admin/                  # רכיבי פאנל ניהול (AlbumList, AlbumForm…)
+└── album/
+    ├── AlbumView.tsx       # לוגיקת תצוגת אלבום + useSyncExternalStore
+    ├── Toolbar.tsx         # סרגל כלים (layout, cols, groupMode, sort, filter)
+    ├── GalleryGrid.tsx     # גלרייה (react-photo-album + pinch)
+    ├── LightboxViewer.tsx  # מציג מלא (YARL) + header bar + close btn
+    ├── FilterPanel.tsx     # פאנל סינון
+    └── InfoPanel.tsx       # פאנל פרטי צילום (EXIF + מפה)
+
+lib/
+├── drive.ts                # Google Drive API + getMockMedia()
+├── kv.ts                   # Vercel KV CRUD לאלבומים
+└── utils.ts                # sortMedia, formatters
+
+types/index.ts              # Layout, SortOption, GroupMode, MediaItem, Album…
+```
+
+## קישורים
+
+- **Production:** https://photo-album-beryl.vercel.app
+- **Vercel dashboard:** https://vercel.com/dorons-projects-6007b220/photo-album
