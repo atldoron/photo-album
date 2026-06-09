@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import type { CSSProperties, ReactNode } from 'react'
 import type { GroupMode, Layout, SortOption } from '@/types'
 
@@ -171,6 +172,7 @@ export default function Toolbar({
   layout, cols, colsMin, colsMax, groupMode, sort, filterOpen,
   onLayoutChange, onColsChange, onGroupModeChange, onSortChange, onFilterToggle, onFilterOpen,
 }: ToolbarProps) {
+  const router = useRouter()
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [colsOpen, setColsOpen] = useState(false)
   const [mobileColsOpen, setMobileColsOpen] = useState(false)
@@ -264,6 +266,28 @@ export default function Toolbar({
       }}
     >
       <div className="flex items-center h-11" style={{ gap: '6px' }}>
+        {/* Back button */}
+        <button
+          onClick={() => router.push('/')}
+          title="חזרה לרשימת האלבומים"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '6px 4px',
+            color: 'var(--fg)',
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            opacity: 0.7,
+          }}
+          aria-label="חזרה"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
           <span style={{ fontSize: '15px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1 }}>
             {albumName}

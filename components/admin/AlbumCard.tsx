@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Album } from '@/types'
@@ -95,12 +96,10 @@ export default function AlbumCard({ album, onEdit, onDelete, onShare }: AlbumCar
       </button>
 
       {/* info — clickable to open album */}
-      <a
+      <Link
         href={`/album/${album.id}`}
-        target="_blank"
-        rel="noreferrer"
         className="flex-1 min-w-0 no-underline"
-        style={{ color: 'inherit' }}
+        style={{ color: 'inherit', textDecoration: 'none' }}
       >
         <p className="font-semibold truncate hover:underline">{album.name}</p>
         <p className="text-sm truncate" style={{ color: 'var(--muted)' }}>
@@ -108,14 +107,12 @@ export default function AlbumCard({ album, onEdit, onDelete, onShare }: AlbumCar
           {album.description && <> · {album.description}</>}
         </p>
         <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{date}</p>
-      </a>
+      </Link>
 
       {/* actions */}
       <div className="flex items-center gap-1 shrink-0">
-        <a
+        <Link
           href={`/album/${album.id}`}
-          target="_blank"
-          rel="noreferrer"
           style={btnBase}
           title="פתח אלבום"
           className="rounded-lg"
@@ -123,7 +120,7 @@ export default function AlbumCard({ album, onEdit, onDelete, onShare }: AlbumCar
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.55'; (e.currentTarget as HTMLElement).style.background = 'none' }}
         >
           <IconOpen />
-        </a>
+        </Link>
         <button
           onClick={onShare}
           style={btnBase}
